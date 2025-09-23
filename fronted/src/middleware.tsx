@@ -52,12 +52,14 @@ export async function middleware(req: NextRequest) {
         if (pathname.startsWith('/api/dev/v1/addons/default-properties')) {
             url.href = `${AGENT_SERVER_URL}/dev-tmp/addons/default-properties`;
             console.log(`Rewriting request to ${url.href}`);
+            console.log("123");
+            
             return NextResponse.rewrite(url);
         }
 
         url.href = `${TEN_DEV_SERVER_URL}${pathname.replace('/api/dev/', '/api/designer/')}`;
 
-        // console.log(`Rewriting request to ${url.href}`);
+        console.log(`Rewriting request to ${url.href}`);
         return NextResponse.rewrite(url);
     } else {
         return NextResponse.next();
