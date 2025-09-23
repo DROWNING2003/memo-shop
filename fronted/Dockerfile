@@ -6,13 +6,16 @@ FROM oven/bun:alpine AS base
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
-RUN corepack enable npm  # 启用 corepack 管理 npm，避免手动下载
+
+# 安装 Node.js 和 npm
+RUN apk add --no-cache nodejs npm
+
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json bun.lock ./
 RUN \
-  if [ -f yarn.lock ]; then corepack enable yarn && yarn --immutable; \
+  if [ -f yarn.lock ]; then npm install -g yarn && yarn --immutable; \
   elif [ -f package-lock.json ]; then npm ci; \
   elif [ -f pnpm-lock.yaml ]; then npm install -g pnpm@10.2.0 && pnpm i; \
   elif [ -f bun.lockb ]; then bun i --frozen-lockfile; \
@@ -23,6 +26,10 @@ RUN \
 # 2. Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# 安装 Node.js 和 npm
+RUN apk add --no-cache nodejs npm
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -32,7 +39,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN \
-  if [ -f yarn.lock ]; then corepack enable yarn && yarn run build; \
+  if [ -f yarn.lock ]; then npm install -g yarn && yarn run build; \
   elif [ -f package-lock.json ]; then npm run build; \
   elif [ -f pnpm-lock.yaml ]; then npm install -g pnpm@10.2.0 && pnpm run build; \
   elif [ -f bun.lockb ]; then bun run build; \
