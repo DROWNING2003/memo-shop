@@ -1,0 +1,1141 @@
+basePath: /
+definitions:
+  models.APIResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  models.Character:
+    properties:
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      creator:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: 关联关系
+      creator_id:
+        type: integer
+      description:
+        type: string
+      drafts:
+        items:
+          $ref: '#/definitions/models.Draft'
+        type: array
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      popularity_score:
+        type: number
+      postcards:
+        items:
+          $ref: '#/definitions/models.Postcard'
+        type: array
+      relations:
+        items:
+          $ref: '#/definitions/models.UserCharacterRelation'
+        type: array
+      updated_at:
+        type: string
+      usage_count:
+        type: integer
+      user_role_desc:
+        type: string
+      user_role_name:
+        description: 用户角色设定
+        type: string
+      visibility:
+        type: string
+      voices:
+        items:
+          $ref: '#/definitions/models.CharacterVoice'
+        type: array
+    type: object
+  models.CharacterCreateRequest:
+    properties:
+      avatar_url:
+        maxLength: 255
+        type: string
+      description:
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      user_role_desc:
+        maxLength: 200
+        type: string
+      user_role_name:
+        maxLength: 50
+        type: string
+      visibility:
+        enum:
+        - private
+        - public
+        type: string
+    required:
+    - description
+    - name
+    - user_role_desc
+    - user_role_name
+    type: object
+  models.CharacterUpdateRequest:
+    properties:
+      avatar_url:
+        maxLength: 255
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 100
+        type: string
+      user_role_desc:
+        maxLength: 200
+        type: string
+      user_role_name:
+        maxLength: 50
+        type: string
+      visibility:
+        enum:
+        - private
+        - public
+        type: string
+    type: object
+  models.CharacterVoice:
+    properties:
+      character:
+        $ref: '#/definitions/models.Character'
+      character_id:
+        type: integer
+      created_at:
+        type: string
+      duration:
+        type: integer
+      file_format:
+        type: string
+      file_size:
+        type: integer
+      id:
+        type: integer
+      updated_at:
+        type: string
+      voice_url:
+        type: string
+    type: object
+  models.Draft:
+    properties:
+      character:
+        $ref: '#/definitions/models.Character'
+      character_id:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      emotion_tags:
+        type: string
+      id:
+        type: integer
+      landscape_image_url:
+        type: string
+      template_id:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: integer
+    type: object
+  models.Favorite:
+    properties:
+      created_at:
+        type: string
+      favoritable_id:
+        type: integer
+      favoritable_type:
+        type: string
+      id:
+        type: integer
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: integer
+    type: object
+  models.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+    type: object
+  models.PaginatedResponse:
+    properties:
+      items: {}
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  models.Postcard:
+    properties:
+      ai_generated_image_url:
+        type: string
+      character:
+        $ref: '#/definitions/models.Character'
+      character_id:
+        type: integer
+      content:
+        type: string
+      conversation_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      is_favorite:
+        type: boolean
+      postcard_template:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/models.User'
+        description: 关联关系
+      user_id:
+        type: integer
+    type: object
+  models.PostcardCreateRequest:
+    properties:
+      character_id:
+        type: integer
+      content:
+        type: string
+      conversation_id:
+        maxLength: 36
+        type: string
+      image_url:
+        maxLength: 255
+        type: string
+      postcard_template:
+        maxLength: 100
+        type: string
+    required:
+    - character_id
+    - content
+    type: object
+  models.PostcardUpdateRequest:
+    properties:
+      content:
+        type: string
+      image_url:
+        maxLength: 255
+        type: string
+      is_favorite:
+        type: boolean
+      postcard_template:
+        maxLength: 100
+        type: string
+      status:
+        enum:
+        - draft
+        - sent
+        - delivered
+        - read
+        type: string
+    type: object
+  models.UploadResponse:
+    properties:
+      filename:
+        type: string
+      size:
+        type: integer
+      url:
+        type: string
+    type: object
+  models.User:
+    properties:
+      avatar_url:
+        type: string
+      characters:
+        description: 关联关系
+        items:
+          $ref: '#/definitions/models.Character'
+        type: array
+      created_at:
+        type: string
+      dark_mode:
+        type: boolean
+      drafts:
+        items:
+          $ref: '#/definitions/models.Draft'
+        type: array
+      email:
+        type: string
+      favorites:
+        items:
+          $ref: '#/definitions/models.Favorite'
+        type: array
+      font_size:
+        type: string
+      id:
+        type: integer
+      language:
+        type: string
+      nickname:
+        type: string
+      postcards:
+        items:
+          $ref: '#/definitions/models.Postcard'
+        type: array
+      signature:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserCharacterRelation:
+    properties:
+      character:
+        $ref: '#/definitions/models.Character'
+      character_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      interaction_count:
+        type: integer
+      is_favorite:
+        type: boolean
+      last_interaction_at:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+      user_id:
+        type: integer
+    type: object
+  models.UserCreateRequest:
+    properties:
+      email:
+        type: string
+      nickname:
+        maxLength: 50
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  models.UserLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.UserResponse:
+    properties:
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      dark_mode:
+        type: boolean
+      email:
+        type: string
+      font_size:
+        type: string
+      id:
+        type: integer
+      language:
+        type: string
+      nickname:
+        type: string
+      signature:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserUpdateRequest:
+    properties:
+      avatar_url:
+        maxLength: 255
+        type: string
+      dark_mode:
+        type: boolean
+      font_size:
+        enum:
+        - small
+        - medium
+        - large
+        type: string
+      language:
+        maxLength: 10
+        type: string
+      nickname:
+        maxLength: 50
+        type: string
+      signature:
+        maxLength: 200
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: 回忆小卖部 AI 角色明信片交流应用 API 文档
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Memory Postcard API
+  version: "1.0"
+paths:
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 用户登录获取访问令牌
+      parameters:
+      - description: 登录信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LoginResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: 用户登录
+      tags:
+      - 用户
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 创建新用户账户
+      parameters:
+      - description: 注册信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: 用户注册
+      tags:
+      - 用户
+  /api/characters:
+    get:
+      description: 分页获取角色列表，支持筛选和搜索
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 可见性
+        enum:
+        - private
+        - public
+        in: query
+        name: visibility
+        type: string
+      - description: 创建者ID
+        in: query
+        name: creator_id
+        type: integer
+      - description: 搜索关键词
+        in: query
+        name: search
+        type: string
+      - default: created_at
+        description: 排序字段
+        enum:
+        - created_at
+        - popularity_score
+        - usage_count
+        in: query
+        name: sort_by
+        type: string
+      - default: desc
+        description: 排序方向
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PaginatedResponse'
+              type: object
+      summary: 获取角色列表
+      tags:
+      - 角色
+    post:
+      consumes:
+      - application/json
+      description: 创建新的AI角色。avatar_url 应该通过 /api/upload/character-avatar 接口上传获得
+      parameters:
+      - description: 角色信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CharacterCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Character'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 创建角色
+      tags:
+      - 角色
+  /api/characters/{id}:
+    delete:
+      description: 删除角色（仅创建者可操作）
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 删除角色
+      tags:
+      - 角色
+    get:
+      description: 根据ID获取角色的详细信息
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Character'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: 获取角色详情
+      tags:
+      - 角色
+    put:
+      consumes:
+      - application/json
+      description: 更新角色信息（仅创建者可操作）
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CharacterUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Character'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新角色
+      tags:
+      - 角色
+  /api/characters/my:
+    get:
+      description: 获取当前用户创建的所有角色
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PaginatedResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取我创建的角色
+      tags:
+      - 角色
+  /api/postcards:
+    get:
+      description: 分页获取用户的明信片列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 对话ID
+        in: query
+        name: conversation_id
+        type: string
+      - description: 角色ID
+        in: query
+        name: character_id
+        type: integer
+      - description: 状态
+        enum:
+        - draft
+        - sent
+        - delivered
+        - read
+        in: query
+        name: status
+        type: string
+      - description: 是否收藏
+        in: query
+        name: is_favorite
+        type: boolean
+      - default: created_at
+        description: 排序字段
+        enum:
+        - created_at
+        - updated_at
+        in: query
+        name: sort_by
+        type: string
+      - default: desc
+        description: 排序方向
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PaginatedResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取明信片列表
+      tags:
+      - 明信片
+    post:
+      consumes:
+      - application/json
+      description: 发送明信片给AI角色
+      parameters:
+      - description: 明信片信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.PostcardCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Postcard'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 创建明信片
+      tags:
+      - 明信片
+  /api/postcards/{id}:
+    delete:
+      description: 删除明信片
+      parameters:
+      - description: 明信片ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 删除明信片
+      tags:
+      - 明信片
+    get:
+      description: 根据ID获取明信片的详细信息
+      parameters:
+      - description: 明信片ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Postcard'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 获取明信片详情
+      tags:
+      - 明信片
+    put:
+      consumes:
+      - application/json
+      description: 更新明信片信息
+      parameters:
+      - description: 明信片ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.PostcardUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Postcard'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新明信片
+      tags:
+      - 明信片
+  /api/postcards/conversations/{conversation_id}:
+    get:
+      description: 根据对话ID获取完整的对话记录
+      parameters:
+      - description: 对话ID
+        in: path
+        name: conversation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Postcard'
+                  type: array
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 获取对话记录
+      tags:
+      - 明信片
+  /api/upload/audio:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传音频文件（用于角色声音）
+      parameters:
+      - description: 音频文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UploadResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 上传音频
+      tags:
+      - 文件上传
+  /api/upload/avatar:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传用户头像
+      parameters:
+      - description: 头像文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UploadResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 上传头像
+      tags:
+      - 文件上传
+  /api/upload/character-avatar:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传角色头像图片
+      parameters:
+      - description: 角色头像文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UploadResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 上传角色头像
+      tags:
+      - 文件上传
+  /api/upload/image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传图片文件到服务器
+      parameters:
+      - description: 图片文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UploadResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 上传图片
+      tags:
+      - 文件上传
+  /api/users/{id}:
+    get:
+      description: 获取指定用户的公开信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UserResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      summary: 根据ID获取用户信息
+      tags:
+      - 用户
+  /api/users/profile:
+    get:
+      description: 获取当前用户的详细信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UserResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 获取用户资料
+      tags:
+      - 用户
+    put:
+      consumes:
+      - application/json
+      description: 更新当前用户的个人信息
+      parameters:
+      - description: 更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新用户资料
+      tags:
+      - 用户
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
