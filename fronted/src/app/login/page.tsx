@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "@/store/reducers/auth";
 
 // 定义表单验证规则
 const loginSchema = z.object({
@@ -33,6 +35,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [loading, setLoading] = React.useState(false);
   const [isLogin, setIsLogin] = React.useState(true);
 
@@ -51,9 +54,15 @@ export default function LoginPage() {
     try {
       const response = await apiClient.login({ email: data.email, password: data.password });
       
-      // 保存token和用户信息
+      // 保存token和用户信息到localStorage
       localStorage.setItem('auth_token', response.token);
       localStorage.setItem('user_info', JSON.stringify(response.user));
+      
+      // 更新Redux store状态
+      dispatch(loginSuccess({
+        user: response.user,
+        token: response.token
+      }));
       
       // 跳转到首页
       router.push('/home');

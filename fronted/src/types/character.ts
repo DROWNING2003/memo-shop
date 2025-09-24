@@ -1,19 +1,25 @@
 export interface Character {
-  id: string
-  name: string
-  description: string
-  story: string
-  avatar: string
-  rating: number
-  likes: string
-  messages: string
-  tags: string[]
-  isOnline: boolean
-  conversations: Conversation[]
-  similarCharacters: SimilarCharacter[]
-  category?: string
-  popularity?: number
-  lastActiveTime?: string
+  id: number;
+  name: string;
+  description: string;
+  avatar_url?: string;
+  voice_url?: string;
+  user_role_name: string;
+  user_role_desc: string;
+  visibility: 'private' | 'public';
+  is_active: boolean;
+  popularity_score: number;
+  usage_count: number;
+  creator_id: number;
+  creator?: {
+    id: number;
+    username: string;
+    email: string;
+    nickname?: string;
+    avatar_url?: string;
+  };
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Conversation {

@@ -226,7 +226,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "创建新的AI角色。avatar_url 应该通过 /api/upload/character-avatar 接口上传获得",
+                "description": "创建新的AI角色。avatar_url 和 voice_url 应该通过上传接口获得",
                 "consumes": [
                     "application/json"
                 ],
@@ -785,6 +785,61 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/postcards/conversation/{conversation_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "根据 conversation_id 获取明信片列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "明信片"
+                ],
+                "summary": "通过 conversation_id 获取明信片列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "对话ID",
+                        "name": "conversation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/models.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.Postcard"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/models.APIResponse"
                         }
@@ -1444,11 +1499,9 @@ const docTemplate = `{
                 "visibility": {
                     "type": "string"
                 },
-                "voices": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.CharacterVoice"
-                    }
+                "voice_url": {
+                    "description": "音色URL字段",
+                    "type": "string"
                 }
             }
         },
@@ -1486,6 +1539,10 @@ const docTemplate = `{
                         "private",
                         "public"
                     ]
+                },
+                "voice_url": {
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         },
@@ -1520,38 +1577,11 @@ const docTemplate = `{
                         "private",
                         "public"
                     ]
-                }
-            }
-        },
-        "models.CharacterVoice": {
-            "type": "object",
-            "properties": {
-                "character": {
-                    "$ref": "#/definitions/models.Character"
-                },
-                "character_id": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "duration": {
-                    "type": "integer"
-                },
-                "file_format": {
-                    "type": "string"
-                },
-                "file_size": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
                 },
                 "voice_url": {
-                    "type": "string"
+                    "description": "音色URL字段",
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         },

@@ -31,6 +31,7 @@ func (s *CharacterService) CreateCharacter(userID uint, req *models.CharacterCre
 		Name:         req.Name,
 		Description:  req.Description,
 		AvatarURL:    req.AvatarURL,
+		VoiceURL:     req.VoiceURL, // 直接设置音色URL
 		Visibility:   req.Visibility,
 		UserRoleName: req.UserRoleName,
 		UserRoleDesc: req.UserRoleDesc,
@@ -65,7 +66,7 @@ func (s *CharacterService) GetCharacter(id uint, userID *uint) (*models.Characte
 	}
 
 	var character models.Character
-	query := s.db.Preload("Creator").Preload("Voices")
+	query := s.db.Preload("Creator")
 
 	if err := query.First(&character, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

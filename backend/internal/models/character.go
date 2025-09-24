@@ -12,6 +12,7 @@ type Character struct {
 	Name            string  `json:"name" gorm:"size:100;not null"`
 	Description     string  `json:"description" gorm:"type:text;not null"`
 	AvatarURL       string  `json:"avatar_url" gorm:"size:255"`
+	VoiceURL        string  `json:"voice_url" gorm:"size:255"` // 音色URL字段
 	Visibility      string  `json:"visibility" gorm:"type:enum('private','public');default:'public'"`
 	IsActive        bool    `json:"is_active" gorm:"default:true"`
 	UsageCount      int     `json:"usage_count" gorm:"default:0"`
@@ -27,23 +28,9 @@ type Character struct {
 
 	// 关联关系
 	Creator   *User                   `json:"creator,omitempty" gorm:"foreignKey:CreatorID"`
-	Voices    []CharacterVoice        `json:"voices,omitempty" gorm:"foreignKey:CharacterID"`
 	Relations []UserCharacterRelation `json:"relations,omitempty" gorm:"foreignKey:CharacterID"`
 	Postcards []Postcard              `json:"postcards,omitempty" gorm:"foreignKey:CharacterID"`
 	Drafts    []Draft                 `json:"drafts,omitempty" gorm:"foreignKey:CharacterID"`
-}
-
-type CharacterVoice struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
-	CharacterID uint      `json:"character_id" gorm:"not null;index"`
-	VoiceURL    string    `json:"voice_url" gorm:"size:255;not null"`
-	FileFormat  string    `json:"file_format" gorm:"type:enum('mp3','wav');not null"`
-	FileSize    int       `json:"file_size"`
-	Duration    int       `json:"duration"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-
-	Character Character `json:"character,omitempty" gorm:"foreignKey:CharacterID"`
 }
 
 type UserCharacterRelation struct {
@@ -68,12 +55,14 @@ type CharacterCreateRequest struct {
 	Visibility   string `json:"visibility" binding:"oneof=private public"`
 	UserRoleName string `json:"user_role_name" binding:"required,max=50"`
 	UserRoleDesc string `json:"user_role_desc" binding:"required,max=200"`
+	VoiceURL     string `json:"voice_url" binding:"max=255"`
 }
 
 type CharacterUpdateRequest struct {
 	Name         string `json:"name" binding:"max=100"`
 	Description  string `json:"description"`
 	AvatarURL    string `json:"avatar_url" binding:"max=255"`
+	VoiceURL     string `json:"voice_url" binding:"max=255"` // 音色URL字段
 	Visibility   string `json:"visibility" binding:"oneof=private public"`
 	IsActive     *bool  `json:"is_active"`
 	UserRoleName string `json:"user_role_name" binding:"max=50"`

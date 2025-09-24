@@ -22,7 +22,7 @@ func NewCharacterHandler(characterService *services.CharacterService) *Character
 
 // CreateCharacter 创建角色
 // @Summary 创建角色
-// @Description 创建新的AI角色。avatar_url 应该通过 /api/upload/character-avatar 接口上传获得
+// @Description 创建新的AI角色。avatar_url 和 voice_url 应该通过上传接口获得
 // @Tags 角色
 // @Accept json
 // @Produce json

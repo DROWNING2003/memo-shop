@@ -134,7 +134,6 @@ func autoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.User{},
 		&models.Character{},
-		&models.CharacterVoice{},
 		&models.UserCharacterRelation{},
 		&models.Postcard{},
 		&models.Draft{},

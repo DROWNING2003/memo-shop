@@ -154,7 +154,11 @@ export function CharacterGrid({ searchQuery, filterType }: CharacterGridProps) {
       {/* 角色网格 */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
         {filteredCharacters.map((character) => (
-          <CharacterCard key={character.id} character={character} />
+          <CharacterCard 
+            key={character.id} 
+            character={character} 
+            showEditButton={filterType === "my"}
+          />
         ))}
       </div>
 

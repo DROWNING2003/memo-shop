@@ -1,22 +1,24 @@
 "use client";
 
 import React from "react";
-import { ArrowLeft, Save, Upload, Sparkles, Volume2, Play, Pause } from "lucide-react";
+import { ArrowLeft, Save, Upload, Sparkles, Volume2, Play, Pause, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AuthGuard } from "@/components/auth-guard";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
-import type { CharacterCreateRequest } from "@/types/api";
+import type { Character, CharacterUpdateRequest } from "@/types/api";
 
-export default function CreateCharacterPage() {
+export default function EditCharacterPage() {
   const router = useRouter();
+  const params = useParams();
+  const characterId = parseInt(params.id as string);
+  
   const [loading, setLoading] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
   const [audioUploading, setAudioUploading] = React.useState(false);
@@ -27,16 +29,47 @@ export default function CreateCharacterPage() {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [audioRef] = React.useState(React.createRef<HTMLAudioElement>());
   
-  const [formData, setFormData] = React.useState<CharacterCreateRequest>({
+  const [character, setCharacter] = React.useState<Character | null>(null);
+  const [formData, setFormData] = React.useState<CharacterUpdateRequest>({
     name: "",
     description: "",
     user_role_name: "",
     user_role_desc: "",
     avatar_url: "",
-    visibility: "public"
+    voice_url: "",
+    visibility: "public",
+    is_active: true
   });
 
-  const handleInputChange = (field: keyof CharacterCreateRequest, value: string) => {
+  // 加载角色数据
+  React.useEffect(() => {
+    const loadCharacter = async () => {
+      try {
+        const characterData = await apiClient.getCharacter(characterId);
+        setCharacter(characterData);
+        setFormData({
+          name: characterData.name,
+          description: characterData.description,
+          user_role_name: characterData.user_role_name,
+          user_role_desc: characterData.user_role_desc,
+          avatar_url: characterData.avatar_url || "",
+          voice_url: characterData.voice_url || "",
+          visibility: characterData.visibility,
+          is_active: characterData.is_active
+        });
+        setVoiceUrl(characterData.voice_url || "");
+      } catch (error) {
+        console.error('Failed to load character:', error);
+        showDialog('加载失败', '角色信息加载失败，请重试');
+      }
+    };
+
+    if (characterId) {
+      loadCharacter();
+    }
+  }, [characterId]);
+
+  const handleInputChange = (field: keyof CharacterUpdateRequest, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -80,6 +113,10 @@ export default function CreateCharacterPage() {
       const response = await apiClient.uploadAudio(file);
       console.log('音色上传成功:', response);
       setVoiceUrl(response.url);
+      setFormData(prev => ({
+        ...prev,
+        voice_url: response.url
+      }));
       showDialog('上传成功', '音色上传成功！');
     } catch (error) {
       console.error('音色上传失败:', error);
@@ -105,14 +142,14 @@ export default function CreateCharacterPage() {
         voice_url: voiceUrl || undefined
       };
       
-      await apiClient.createCharacter(submitData);
-      showDialog('创建成功', '角色创建成功！');
+      await apiClient.updateCharacter(characterId, submitData);
+      showDialog('更新成功', '角色信息更新成功！');
       setTimeout(() => {
         router.push('/characters');
       }, 1500);
     } catch (error) {
-      console.error('Failed to create character:', error);
-      showDialog('创建失败', '创建角色失败，请重试');
+      console.error('Failed to update character:', error);
+      showDialog('更新失败', '角色信息更新失败，请重试');
     } finally {
       setLoading(false);
     }
@@ -140,8 +177,25 @@ export default function CreateCharacterPage() {
 
   const handleRemoveVoice = () => {
     setVoiceUrl("");
+    setFormData(prev => ({
+      ...prev,
+      voice_url: ""
+    }));
     setIsPlaying(false);
   };
+
+  if (!character) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen bg-page font-base pb-20 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-4"></div>
+            <p className="text-muted-foreground">加载角色信息中...</p>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
 
   return (
     <AuthGuard>
@@ -158,7 +212,7 @@ export default function CreateCharacterPage() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             
-            <h1 className="text-page-title color-text-primary">创建角色</h1>
+            <h1 className="text-page-title color-text-primary">编辑角色</h1>
             
             <Button
               onClick={handleSubmit}
@@ -168,12 +222,12 @@ export default function CreateCharacterPage() {
               {loading ? (
                 <>
                   <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2"></div>
-                  创建中...
+                  更新中...
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  创建角色
+                  保存修改
                 </>
               )}
             </Button>
@@ -203,7 +257,7 @@ export default function CreateCharacterPage() {
                   <div className="flex items-center space-x-2 px-4 py-2 border border-dashed border-primary rounded-md hover:bg-primary/5 transition-colors">
                     <Upload className="w-4 h-4" />
                     <span className="text-sm color-text-primary">
-                      {uploading ? '上传中...' : '上传头像'}
+                      {uploading ? '上传中...' : '上传新头像'}
                     </span>
                   </div>
                 </Label>
@@ -389,10 +443,36 @@ export default function CreateCharacterPage() {
             </div>
           </div>
 
+          {/* 状态设置 */}
+          <div className="glass-container-primary rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium color-text-primary block mb-1">
+                  角色状态
+                </Label>
+                <p className="text-xs color-text-secondary">
+                  {formData.is_active ? '角色可用' : '角色已禁用'}
+                </p>
+              </div>
+              <Select
+                value={formData.is_active ? "active" : "inactive"}
+                onValueChange={(value: string) => handleInputChange('is_active', value === "active")}
+              >
+                <SelectTrigger className="w-[120px] bg-container-secondary border-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">启用</SelectItem>
+                  <SelectItem value="inactive">禁用</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {/* 提示信息 */}
           <div className="text-center">
             <p className="text-xs color-text-tertiary">
-              创建角色后，你可以使用这个角色来创建明信片和进行对话 ✨
+              修改角色信息后，角色的对话和明信片将使用新的设置 ✨
             </p>
           </div>
         </form>

@@ -15,6 +15,12 @@ const navigationItems = [
   {
     icon: Users,
     label: "明信片广场",
+    path: "/square",
+    key: "square"
+  },
+  {
+    icon: Users,
+    label: "角色广场",
     path: "/characters",
     key: "characters"
   },

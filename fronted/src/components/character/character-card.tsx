@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MessageCircle, User, Star, Eye } from "lucide-react";
+import { MessageCircle, User, Star, Eye, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Character } from "@/types/api";
 import { useRouter } from "next/navigation";
@@ -10,9 +10,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface CharacterCardProps {
   character: Character;
+  showEditButton?: boolean;
 }
 
-export function CharacterCard({ character }: CharacterCardProps) {
+export function CharacterCard({ character, showEditButton = false }: CharacterCardProps) {
   const router = useRouter();
 
   const handleCardClick = () => {
@@ -22,6 +23,11 @@ export function CharacterCard({ character }: CharacterCardProps) {
   const handleChatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     router.push(`/postcards/create?character_id=${character.id}`);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/characters/${character.id}/edit`);
   };
 
   // 根据角色类型选择渐变样式
@@ -87,7 +93,7 @@ export function CharacterCard({ character }: CharacterCardProps) {
         </div>
 
         {/* 操作按钮 */}
-        <div className="w-full pt-2">
+        <div className="w-full pt-2 space-y-2">
           <button
             onClick={handleChatClick}
             className="w-full py-2 px-3 rounded-xl bg-background/50 hover:bg-background/70 transition-colors text-xs font-medium text-foreground flex items-center justify-center space-x-1"
@@ -95,6 +101,17 @@ export function CharacterCard({ character }: CharacterCardProps) {
             <MessageCircle className="w-3 h-3" />
             <span>开始对话</span>
           </button>
+          
+          {/* 编辑按钮 - 只显示在"我的角色"列表中 */}
+          {showEditButton && (
+            <button
+              onClick={handleEditClick}
+              className="w-full py-2 px-3 rounded-xl bg-background/30 hover:bg-background/50 transition-colors text-xs font-medium text-foreground flex items-center justify-center space-x-1 border border-foreground/20"
+            >
+              <Edit className="w-3 h-3" />
+              <span>编辑角色</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

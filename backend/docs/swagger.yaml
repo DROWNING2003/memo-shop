@@ -53,10 +53,9 @@ definitions:
         type: string
       visibility:
         type: string
-      voices:
-        items:
-          $ref: '#/definitions/models.CharacterVoice'
-        type: array
+      voice_url:
+        description: 音色URL字段
+        type: string
     type: object
   models.CharacterCreateRequest:
     properties:
@@ -78,6 +77,9 @@ definitions:
         enum:
         - private
         - public
+        type: string
+      voice_url:
+        maxLength: 255
         type: string
     required:
     - description
@@ -108,26 +110,9 @@ definitions:
         - private
         - public
         type: string
-    type: object
-  models.CharacterVoice:
-    properties:
-      character:
-        $ref: '#/definitions/models.Character'
-      character_id:
-        type: integer
-      created_at:
-        type: string
-      duration:
-        type: integer
-      file_format:
-        type: string
-      file_size:
-        type: integer
-      id:
-        type: integer
-      updated_at:
-        type: string
       voice_url:
+        description: 音色URL字段
+        maxLength: 255
         type: string
     type: object
   models.Draft:
@@ -560,7 +545,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建新的AI角色。avatar_url 应该通过 /api/upload/character-avatar 接口上传获得
+      description: 创建新的AI角色。avatar_url 和 voice_url 应该通过上传接口获得
       parameters:
       - description: 角色信息
         in: body
@@ -986,6 +971,38 @@ paths:
       security:
       - BearerAuth: []
       summary: 更新明信片
+      tags:
+      - 明信片
+  /api/postcards/conversation/{conversation_id}:
+    get:
+      description: 根据 conversation_id 获取明信片列表
+      parameters:
+      - description: 对话ID
+        in: path
+        name: conversation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Postcard'
+                  type: array
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 通过 conversation_id 获取明信片列表
       tags:
       - 明信片
   /api/postcards/conversations/{conversation_id}:

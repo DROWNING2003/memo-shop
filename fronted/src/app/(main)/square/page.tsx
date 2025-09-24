@@ -1,23 +1,64 @@
 "use client";
 
 import React from "react";
-import { Search, Plus, Users } from "lucide-react";
+import { Search, Plus, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { CharacterGrid } from "@/components/character/character-grid";
+import { PostcardGrid } from "@/components/postcard/postcard-grid";
 import BottomNavigation from "@/components/BottomNavigation";
 import { AuthGuard } from "@/components/auth-guard";
 import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api";
+import type { Postcard } from "@/types/api";
 
-export default function CharactersPage() {
+export default function PostcardsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filterType, setFilterType] = React.useState<"all" | "public" | "my">("all");
-  const [loading, setLoading] = React.useState(false);
+  const [postcards, setPostcards] = React.useState<Postcard[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  const handleCreateCharacter = () => {
-    router.push("/characters/create");
+  React.useEffect(() => {
+    loadPostcards();
+  }, []);
+
+  const loadPostcards = async () => {
+    try {
+      const response = await apiClient.getPostcards({
+        page: 1,
+        page_size: 20,
+        status: 'sent' // 只显示已发送的明信片
+      });
+      setPostcards(response.items);
+    } catch (error) {
+      console.error('Failed to load postcards:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePostcard = () => {
+    router.push("/postcards/create");
+  };
+
+  const handlePostcardClick = (postcard: Postcard) => {
+    // 跳转到明信片详情页面
+    router.push(`/postcards/conversation/${postcard.conversation_id}`);
+  };
+
+  const handleLikeClick = async (postcard: Postcard) => {
+    try {
+      await apiClient.updatePostcard(postcard.id, {
+        is_favorite: !postcard.is_favorite
+      });
+      // 更新本地状态
+      setPostcards(prev => prev.map(p => 
+        p.id === postcard.id ? { ...p, is_favorite: !p.is_favorite } : p
+      ));
+    } catch (error) {
+      console.error('Failed to update favorite status:', error);
+    }
   };
 
   if (loading) {
@@ -41,17 +82,17 @@ export default function CharactersPage() {
           <div className="flex items-center justify-between p-standard">
             <div className="flex items-center space-x-compact">
               <div className="w-8 h-8 rounded-full bg-accent-mint-blue flex items-center justify-center">
-                <Users className="w-4 h-4 color-text-accent" />
+                <Mail className="w-4 h-4 color-text-accent" />
               </div>
               <div>
-                <h1 className="text-page-title color-text-primary">角色广场</h1>
-                <p className="text-body-small color-text-secondary">发现有趣的角色，开始对话 ✨</p>
+                <h1 className="text-page-title color-text-primary">明信片广场</h1>
+                <p className="text-body-small color-text-secondary">分享温暖，传递心意 ✨</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <ThemeToggle />
               <Button
-                onClick={handleCreateCharacter}
+                onClick={handleCreatePostcard}
                 size="icon"
                 className="neumorphism card-hover"
                 variant="ghost"
@@ -61,14 +102,12 @@ export default function CharactersPage() {
             </div>
           </div>
         </header>
-
-
         {/* 搜索和筛选 */}
         <div className="p-standard space-y-standard">
           <div className="relative">
             <Search className="absolute left-compact top-1/2 transform -translate-y-1/2 w-4 h-4 color-text-tertiary" />
             <Input
-              placeholder="搜索角色名称或描述..."
+              placeholder="搜索明信片内容或角色名称..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-container-secondary rounded-medium border-0 bg-transparent"
@@ -83,7 +122,7 @@ export default function CharactersPage() {
               onClick={() => setFilterType("all")}
               className={filterType === "all" ? "bg-success text-white" : "bg-container-secondary"}
             >
-              全部角色
+              全部
             </Button>
             <Button
               variant={filterType === "public" ? "default" : "outline"}
@@ -91,7 +130,7 @@ export default function CharactersPage() {
               onClick={() => setFilterType("public")}
               className={filterType === "public" ? "bg-info text-white" : "bg-container-secondary"}
             >
-              公开角色
+              公开明信片
             </Button>
             <Button
               variant={filterType === "my" ? "default" : "outline"}
@@ -99,18 +138,25 @@ export default function CharactersPage() {
               onClick={() => setFilterType("my")}
               className={filterType === "my" ? "bg-accent-soft-coral text-white" : "bg-container-secondary"}
             >
-              我的角色
+              我的明信片
             </Button>
           </div>
         </div>
 
-        {/* 角色网格 */}
+        {/* 明信片网格 */}
         <div className="px-standard">
-          <CharacterGrid 
+          <PostcardGrid 
+            postcards={postcards}
             searchQuery={searchQuery} 
             filterType={filterType}
+            onPostcardClick={handlePostcardClick}
+            onLikeClick={handleLikeClick}
           />
         </div>
+
+
+          
+ 
 
         {/* 底部导航 */}
         <BottomNavigation />

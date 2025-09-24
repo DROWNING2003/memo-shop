@@ -51,6 +51,7 @@ export interface Character {
   name: string;
   description: string;
   avatar_url?: string;
+  voice_url?: string;
   user_role_name: string;
   user_role_desc: string;
   visibility: 'private' | 'public';
@@ -69,6 +70,7 @@ export interface CharacterCreateRequest {
   user_role_name: string;
   user_role_desc: string;
   avatar_url?: string;
+  voice_url?: string;
   visibility?: 'private' | 'public';
 }
 
@@ -139,6 +141,7 @@ export interface CharacterUpdateRequest {
   user_role_name?: string;
   user_role_desc?: string;
   avatar_url?: string;
+  voice_url?: string;
   is_active?: boolean;
   visibility?: 'private' | 'public';
 }
