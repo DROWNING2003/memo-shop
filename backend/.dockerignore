@@ -1,0 +1,12 @@
+.env
+.env.local
+.env.example
+*.log
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+node_modules
+coverage
+.nyc_output

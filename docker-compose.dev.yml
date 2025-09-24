@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # MySQL Database
@@ -18,6 +18,10 @@ services:
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - ten-agent-dev-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
   # Redis Cache
   redis:
@@ -30,6 +34,11 @@ services:
       - redis_dev_data:/data
     networks:
       - ten-agent-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # MinIO Object Storage
   minio:
@@ -47,23 +56,65 @@ services:
     networks:
       - ten-agent-dev-network
     command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
-  # MinIO Client for bucket creation
-  minio-client:
-    image: minio/mc:latest
-    container_name: ten-agent-minio-client
+  # Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: memory-postcard-backend-dev
+    restart: unless-stopped
+    environment:
+      # 数据库配置
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ten_user
+      DB_PASSWORD: ten_password
+      DB_NAME: ten_agent_dev
+
+      # Redis 配置
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+
+      # MinIO 配置
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET_NAME: ten-agent-bucket
+      MINIO_USE_SSL: "false"
+
+      # JWT 配置
+      JWT_SECRET: "memory-postcard-dev-secret-key-2024"
+
+      # 应用配置
+      PORT: 8080
+      ENVIRONMENT: development
+
+      # AI 服务配置（可选）
+      OPENAI_API_KEY: ""
+      OPENAI_BASE_URL: "https://api.openai.com/v1"
+    ports:
+      - "8080:8080"
     depends_on:
-      - minio
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
       - ten-agent-dev-network
-    entrypoint: >
-      /bin/sh -c "
-      sleep 10;
-      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin123;
-      /usr/bin/mc mb myminio/ten-agent-bucket --ignore-existing;
-      /usr/bin/mc policy set public myminio/ten-agent-bucket;
-      exit 0;
-      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   mysql_dev_data:
