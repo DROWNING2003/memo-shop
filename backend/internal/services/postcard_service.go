@@ -50,6 +50,7 @@ func (s *PostcardService) CreatePostcard(userID uint, req *models.PostcardCreate
 		ConversationID:   conversationID,
 		UserID:           userID,
 		CharacterID:      req.CharacterID,
+		Type:             req.Type,
 		Content:          req.Content,
 		ImageURL:         req.ImageURL,
 		PostcardTemplate: req.PostcardTemplate,
@@ -85,6 +86,22 @@ func (s *PostcardService) GetPostcard(id uint, userID uint) (*models.Postcard, e
 	return &postcard, nil
 }
 
+// GetPostcardsByConversationID 通过 conversation_id 获取明信片列表
+func (s *PostcardService) GetPostcardsByConversationID(conversationID string) ([]models.Postcard, error) {
+	var postcards []models.Postcard
+	if err := s.db.Preload("User").Preload("Character").
+		Where("conversation_id = ?", conversationID).
+		Order("created_at ASC").
+		Find(&postcards).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("postcards not found")
+		}
+		return nil, fmt.Errorf("failed to get postcards by conversation_id: %w", err)
+	}
+
+	return postcards, nil
+}
+
 // ListPostcards 获取明信片列表
 func (s *PostcardService) ListPostcards(userID uint, query *models.PostcardListQuery) (*models.PaginatedResponse, error) {
 	var postcards []models.Postcard
@@ -99,6 +116,10 @@ func (s *PostcardService) ListPostcards(userID uint, query *models.PostcardListQ
 
 	if query.CharacterID != 0 {
 		db = db.Where("character_id = ?", query.CharacterID)
+	}
+
+	if query.Type != "" && query.Type != "all" {
+		db = db.Where("type = ?", query.Type)
 	}
 
 	if query.Status != "" {
@@ -278,6 +299,7 @@ func (s *PostcardService) generateAIReplySync(conversationID string, userID, cha
 		ConversationID: conversationID,
 		UserID:         userID, // 这里可能需要调整，或者创建一个系统用户
 		CharacterID:    characterID,
+		Type:           "ai",
 		Content:        reply,
 		Status:         "sent",
 	}

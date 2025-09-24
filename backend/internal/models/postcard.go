@@ -11,6 +11,7 @@ type Postcard struct {
 	ConversationID      string         `json:"conversation_id" gorm:"size:36;not null;index"`
 	UserID              uint           `json:"user_id" gorm:"not null;index"`
 	CharacterID         uint           `json:"character_id" gorm:"not null;index"`
+	Type                string         `json:"type" gorm:"type:enum('user','ai');default:'user';not null"`
 	Content             string         `json:"content" gorm:"type:text;not null"`
 	ImageURL            string         `json:"image_url" gorm:"size:255"`
 	AIGeneratedImageURL string         `json:"ai_generated_image_url" gorm:"size:255"`
@@ -53,6 +54,7 @@ type Favorite struct {
 
 type PostcardCreateRequest struct {
 	CharacterID      uint   `json:"character_id" binding:"required"`
+	Type             string `json:"type" binding:"required,oneof=user ai"`
 	Content          string `json:"content" binding:"required"`
 	ImageURL         string `json:"image_url" binding:"max=255"`
 	PostcardTemplate string `json:"postcard_template" binding:"max=100"`
@@ -72,6 +74,7 @@ type PostcardListQuery struct {
 	PageSize       int    `form:"page_size,default=20" binding:"min=1,max=100"`
 	ConversationID string `form:"conversation_id"`
 	CharacterID    uint   `form:"character_id"`
+	Type           string `form:"type" binding:"omitempty,oneof=all user ai"`
 	Status         string `form:"status" binding:"omitempty,oneof=draft sent delivered read"`
 	IsFavorite     *bool  `form:"is_favorite"`
 	SortBy         string `form:"sort_by,default=created_at" binding:"oneof=created_at updated_at"`

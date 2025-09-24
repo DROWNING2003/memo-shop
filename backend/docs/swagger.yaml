@@ -213,6 +213,8 @@ definitions:
         type: string
       status:
         type: string
+      type:
+        type: string
       updated_at:
         type: string
       user:
@@ -237,9 +239,15 @@ definitions:
       postcard_template:
         maxLength: 100
         type: string
+      type:
+        enum:
+        - user
+        - ai
+        type: string
     required:
     - character_id
     - content
+    - type
     type: object
   models.PostcardUpdateRequest:
     properties:

@@ -228,3 +228,29 @@ func (h *PostcardHandler) GetConversation(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Success(postcards))
 }
+
+// GetPostcardsByConversationID 通过 conversation_id 获取明信片列表
+// @Summary 通过 conversation_id 获取明信片列表
+// @Description 根据 conversation_id 获取明信片列表
+// @Tags 明信片
+// @Produce json
+// @Security BearerAuth
+// @Param conversation_id path string true "对话ID"
+// @Success 200 {object} models.APIResponse{data=[]models.Postcard}
+// @Failure 404 {object} models.APIResponse
+// @Router /api/postcards/conversation/{conversation_id} [get]
+func (h *PostcardHandler) GetPostcardsByConversationID(c *gin.Context) {
+	conversationID := c.Param("conversation_id")
+	if conversationID == "" {
+		c.JSON(http.StatusBadRequest, models.Error(400, "Conversation ID is required"))
+		return
+	}
+
+	postcards, err := h.postcardService.GetPostcardsByConversationID(conversationID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Error(500, err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success(postcards))
+}

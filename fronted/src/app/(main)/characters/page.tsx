@@ -44,7 +44,7 @@ export default function PostcardsPage() {
 
   const handlePostcardClick = (postcard: Postcard) => {
     // 跳转到明信片详情页面
-    router.push(`/postcards/${postcard.id}`);
+    router.push(`/postcards/conversation/${postcard.conversation_id}`);
   };
 
   const handleLikeClick = async (postcard: Postcard) => {

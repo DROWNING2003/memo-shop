@@ -58,7 +58,8 @@ export default function CreatePostcardPage() {
     try {
       await apiClient.createPostcard({
         character_id: character.id,
-        content: content.trim()
+        content: content.trim(),
+        type: 'user' // 用户发送的明信片类型为 'user'
       });
       
       // 发送成功，跳转回首页

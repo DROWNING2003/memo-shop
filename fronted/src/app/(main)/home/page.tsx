@@ -23,7 +23,8 @@ export default function HomePage() {
         page_size: 10,
         status: 'sent',
         sort_by: 'created_at',
-        sort_order: 'desc'
+        sort_order: 'desc',
+        type: 'user' // 获取所有类型的明信片
       });
       setRecentPostcards(response.items);
     } catch (error) {
@@ -184,18 +185,37 @@ export default function HomePage() {
                             className={`bg-card-glass rounded-medium p-compact cursor-pointer hover:shadow-lg transition-all ${
                               index < group.postcards.length - 1 ? 'mb-3' : ''
                             }`}
-                            onClick={() => router.push(`/postcards/${postcard.id}`)}
+                            onClick={() => router.push(`/postcards/conversation/${postcard.conversation_id}`)}
                           >
                             <div className="flex items-start gap-3">
-                              <img 
-                                className="w-8 h-8 object-cover rounded-full" 
-                                alt={`${postcard.character?.name || '角色'}的头像`}
-                                src={postcard.character?.avatar_url || "https://static.paraflowcontent.com/public/resource/image/ad9d61cd-f350-4b2d-8d89-2f2e6916ea8e.jpeg"}
-                              />
+                              {postcard.type === 'user' ? (
+                                // 用户头像：如果用户头像为空则使用名字的第一个字当头像
+                                postcard.user?.avatar_url ? (
+                                  <img 
+                                    className="w-8 h-8 object-cover rounded-full" 
+                                    alt={`${postcard.user?.nickname || postcard.user?.username || '用户'}的头像`}
+                                    src={postcard.user.avatar_url}
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-primary-base flex items-center justify-center text-white text-sm font-medium">
+                                    {(postcard.user?.nickname || postcard.user?.username || '用户').charAt(0)}
+                                  </div>
+                                )
+                              ) : (
+                                // AI头像：使用角色的头像
+                                <img 
+                                  className="w-8 h-8 object-cover rounded-full" 
+                                  alt={`${postcard.character?.name || 'AI'}的头像`}
+                                  src={postcard.character?.avatar_url || "https://static.paraflowcontent.com/public/resource/image/ad9d61cd-f350-4b2d-8d89-2f2e6916ea8e.jpeg"}
+                                />
+                              )}
                               <div className="flex-1">
                                 <div className="flex justify-between items-center mb-1">
                                   <span className="text-body-small color-text-primary font-medium">
-                                    {postcard.character?.name || '未知角色'}
+                                    {postcard.type === 'user' 
+                                      ? postcard.user?.nickname || postcard.user?.username || '用户'
+                                      : postcard.character?.name || 'AI角色'
+                                    }
                                   </span>
                                   <span className="text-caption color-text-quaternary">{time}</span>
                                 </div>

@@ -1681,6 +1681,9 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
+                "type": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -1701,7 +1704,8 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "character_id",
-                "content"
+                "content",
+                "type"
             ],
             "properties": {
                 "character_id": {
@@ -1721,6 +1725,13 @@ const docTemplate = `{
                 "postcard_template": {
                     "type": "string",
                     "maxLength": 100
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "ai"
+                    ]
                 }
             }
         },

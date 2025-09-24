@@ -84,6 +84,7 @@ export interface Postcard {
   image_url?: string;
   ai_generated_image_url?: string;
   postcard_template?: string;
+  type: 'user' | 'ai'; // 新增的type字段，表示明信片类型
   status: 'draft' | 'sent' | 'delivered' | 'read';
   is_favorite: boolean;
   created_at: string;
@@ -96,12 +97,14 @@ export interface PostcardCreateRequest {
   conversation_id?: string;
   image_url?: string;
   postcard_template?: string;
+  type?: 'user' | 'ai'; // 新增的type字段
 }
 
 export interface PostcardUpdateRequest {
   content?: string;
   image_url?: string;
   postcard_template?: string;
+  type?: 'user' | 'ai'; // 新增的type字段
   status?: 'draft' | 'sent' | 'delivered' | 'read';
   is_favorite?: boolean;
 }
@@ -116,6 +119,7 @@ export interface PostcardListParams {
   is_favorite?: boolean;
   sort_by?: 'created_at' | 'updated_at';
   sort_order?: 'asc' | 'desc';
+  type?: 'user' | 'ai' | 'all'; // 过滤明信片类型
 }
 
 export interface CharacterListParams {

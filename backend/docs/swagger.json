@@ -1675,6 +1675,9 @@
                 "status": {
                     "type": "string"
                 },
+                "type": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -1695,7 +1698,8 @@
             "type": "object",
             "required": [
                 "character_id",
-                "content"
+                "content",
+                "type"
             ],
             "properties": {
                 "character_id": {
@@ -1715,6 +1719,13 @@
                 "postcard_template": {
                     "type": "string",
                     "maxLength": 100
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "ai"
+                    ]
                 }
             }
         },
