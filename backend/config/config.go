@@ -22,12 +22,19 @@ type Config struct {
 	RedisPassword string
 	RedisDB       int
 
+	// RabbitMQ 配置
+	RabbitMQHost     string
+	RabbitMQPort     string
+	RabbitMQUser     string
+	RabbitMQPassword string
+
 	// MinIO 配置
-	MinIOEndpoint   string
-	MinIOAccessKey  string
-	MinIOSecretKey  string
-	MinIOBucketName string
-	MinIOUseSSL     bool
+	MinIOEndpoint      string
+	MinIOAccessKey     string
+	MinIOSecretKey     string
+	MinIOBucketName    string
+	MinIOUseSSL        bool
+	MinIOPublicBaseURL string
 
 	// JWT 配置
 	JWTSecret string
@@ -53,11 +60,17 @@ func Load() *Config {
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 		RedisDB:       0,
 
-		MinIOEndpoint:   getEnv("MINIO_ENDPOINT", "localhost:9000"),
-		MinIOAccessKey:  getEnv("MINIO_ACCESS_KEY", "minioadmin"),
-		MinIOSecretKey:  getEnv("MINIO_SECRET_KEY", "minioadmin"),
-		MinIOBucketName: getEnv("MINIO_BUCKET_NAME", "memory-postcard"),
-		MinIOUseSSL:     getEnv("MINIO_USE_SSL", "false") == "true",
+		RabbitMQHost:     getEnv("RABBITMQ_HOST", "localhost"),
+		RabbitMQPort:     getEnv("RABBITMQ_PORT", "5672"),
+		RabbitMQUser:     getEnv("RABBITMQ_USER", "guest"),
+		RabbitMQPassword: getEnv("RABBITMQ_PASSWORD", "guest"),
+
+		MinIOEndpoint:      getEnv("MINIO_ENDPOINT", "localhost:9000"),
+		MinIOAccessKey:     getEnv("MINIO_ACCESS_KEY", "minioadmin"),
+		MinIOSecretKey:     getEnv("MINIO_SECRET_KEY", "minioadmin"),
+		MinIOBucketName:    getEnv("MINIO_BUCKET_NAME", "memory-postcard"),
+		MinIOUseSSL:        getEnv("MINIO_USE_SSL", "false") == "true",
+		MinIOPublicBaseURL: getEnv("MINIO_PUBLIC_BASE_URL", ""),
 
 		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
 

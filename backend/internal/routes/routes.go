@@ -64,6 +64,9 @@ func SetupRoutes(r *gin.Engine, services *services.Services, cfg *config.Config)
 				authenticated.PUT("/:id", characterHandler.UpdateCharacter)
 				authenticated.DELETE("/:id", characterHandler.DeleteCharacter)
 				authenticated.GET("/my", characterHandler.GetMyCharacters)
+				authenticated.GET("/favorites", characterHandler.GetFavoriteCharacters)
+				authenticated.POST("/:id/favorite", characterHandler.ToggleFavorite)
+				authenticated.GET("/:id/favorite", characterHandler.CheckFavoriteStatus)
 			}
 		}
 

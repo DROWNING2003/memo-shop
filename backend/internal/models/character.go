@@ -8,7 +8,7 @@ import (
 
 type Character struct {
 	ID              uint    `json:"id" gorm:"primaryKey"`
-	CreatorID       *uint   `json:"creator_id" gorm:"index"`
+	CreatorID       uint    `json:"creator_id" gorm:"index"`
 	Name            string  `json:"name" gorm:"size:100;not null"`
 	Description     string  `json:"description" gorm:"type:text;not null"`
 	AvatarURL       string  `json:"avatar_url" gorm:"size:255"`

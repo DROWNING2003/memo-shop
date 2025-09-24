@@ -92,8 +92,41 @@ func InitMinIO(cfg *config.Config) (*minio.Client, error) {
 		log.Printf("Bucket '%s' created successfully", cfg.MinIOBucketName)
 	}
 
+	// 设置存储桶为公开访问权限
+	err = setupBucketPublicPolicy(minioClient, cfg.MinIOBucketName)
+	if err != nil {
+		log.Printf("Warning: Failed to set bucket public policy: %v", err)
+	} else {
+		log.Printf("Bucket '%s' public access policy set successfully", cfg.MinIOBucketName)
+	}
+
 	log.Println("MinIO connected successfully")
 	return minioClient, nil
+}
+
+// setupBucketPublicPolicy 设置存储桶为公开访问权限
+func setupBucketPublicPolicy(minioClient *minio.Client, bucketName string) error {
+	ctx := context.Background()
+
+	// 设置桶策略为公开读取
+	policy := `{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Effect": "Allow",
+				"Principal": {"AWS": ["*"]},
+				"Action": ["s3:GetObject"],
+				"Resource": ["arn:aws:s3:::%s/*"]
+			}
+		]
+	}`
+
+	err := minioClient.SetBucketPolicy(ctx, bucketName, fmt.Sprintf(policy, bucketName))
+	if err != nil {
+		return fmt.Errorf("failed to set bucket policy: %w", err)
+	}
+
+	return nil
 }
 
 // autoMigrate 自动迁移数据库表

@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"log"
 	"memory-postcard-backend/internal/models"
 	"time"
 
@@ -15,13 +16,15 @@ type PostcardService struct {
 	db        *gorm.DB
 	redis     *redis.Client
 	aiService *AIService
+	mqService *MQService
 }
 
-func NewPostcardService(db *gorm.DB, redis *redis.Client, aiService *AIService) *PostcardService {
+func NewPostcardService(db *gorm.DB, redis *redis.Client, aiService *AIService, mqService *MQService) *PostcardService {
 	return &PostcardService{
 		db:        db,
 		redis:     redis,
 		aiService: aiService,
+		mqService: mqService,
 	}
 }
 
@@ -226,8 +229,32 @@ func (s *PostcardService) updateCharacterStats(userID, characterID uint) {
 	}
 }
 
-// generateAIReply 生成 AI 回复
+// generateAIReply 生成 AI 回复（通过 MQ 异步处理）
 func (s *PostcardService) generateAIReply(conversationID string, userID, characterID uint, userMessage string) {
+	// 如果 MQ 服务不可用，使用同步方式处理
+	if s.mqService == nil {
+		s.generateAIReplySync(conversationID, userID, characterID, userMessage)
+		return
+	}
+
+	// 创建 AI 回复消息
+	message := &AIReplyMessage{
+		ConversationID: conversationID,
+		UserID:         userID,
+		CharacterID:    characterID,
+		UserMessage:    userMessage,
+	}
+
+	// 发布到消息队列
+	if err := s.mqService.PublishAIReplyMessage(message); err != nil {
+		// 如果发布失败，回退到同步处理
+		log.Printf("Failed to publish AI reply message to MQ: %v, falling back to sync processing", err)
+		s.generateAIReplySync(conversationID, userID, characterID, userMessage)
+	}
+}
+
+// generateAIReplySync 同步生成 AI 回复（MQ 不可用时的回退方案）
+func (s *PostcardService) generateAIReplySync(conversationID string, userID, characterID uint, userMessage string) {
 	// 获取角色信息
 	var character models.Character
 	if err := s.db.First(&character, characterID).Error; err != nil {

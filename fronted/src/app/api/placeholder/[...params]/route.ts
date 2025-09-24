@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface RouteParams {
+  params: {
+    params: string[];
+  };
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { params: string[] } }
+  { params }: RouteParams
 ) {
   const [width, height] = params.params;
   

@@ -238,3 +238,108 @@ func (h *CharacterHandler) GetMyCharacters(c *gin.Context) {
 
 	c.JSON(http.StatusOK, models.Success(result))
 }
+
+// ToggleFavorite 切换收藏状态
+// @Summary 切换角色收藏状态
+// @Description 收藏或取消收藏角色
+// @Tags 角色
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "角色ID"
+// @Success 200 {object} models.APIResponse{data=object{is_favorite=bool}}
+// @Failure 400 {object} models.APIResponse
+// @Router /api/characters/{id}/favorite [post]
+func (h *CharacterHandler) ToggleFavorite(c *gin.Context) {
+	userID, exists := middleware.GetCurrentUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.Error(401, "Unauthorized"))
+		return
+	}
+
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Error(400, "Invalid character ID"))
+		return
+	}
+
+	isFavorite, err := h.characterService.ToggleFavorite(userID, uint(id))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Error(400, err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success(gin.H{
+		"is_favorite": isFavorite,
+	}))
+}
+
+// GetFavoriteCharacters 获取收藏的角色列表
+// @Summary 获取收藏的角色列表
+// @Description 获取当前用户收藏的所有角色
+// @Tags 角色
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} models.APIResponse{data=models.PaginatedResponse}
+// @Router /api/characters/favorites [get]
+func (h *CharacterHandler) GetFavoriteCharacters(c *gin.Context) {
+	userID, exists := middleware.GetCurrentUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.Error(401, "Unauthorized"))
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	result, err := h.characterService.GetFavoriteCharacters(userID, page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Error(500, err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success(result))
+}
+
+// CheckFavoriteStatus 检查收藏状态
+// @Summary 检查角色收藏状态
+// @Description 检查当前用户是否收藏了指定角色
+// @Tags 角色
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "角色ID"
+// @Success 200 {object} models.APIResponse{data=object{is_favorite=bool}}
+// @Router /api/characters/{id}/favorite [get]
+func (h *CharacterHandler) CheckFavoriteStatus(c *gin.Context) {
+	userID, exists := middleware.GetCurrentUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, models.Error(401, "Unauthorized"))
+		return
+	}
+
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Error(400, "Invalid character ID"))
+		return
+	}
+
+	isFavorite, err := h.characterService.IsCharacterFavorite(userID, uint(id))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Error(500, err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Success(gin.H{
+		"is_favorite": isFavorite,
+	}))
+}

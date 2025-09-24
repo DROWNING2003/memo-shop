@@ -2,27 +2,27 @@
 
 import React from "react";
 import { motion } from "motion/react";
-import { Store, Mail, User, Plus } from "lucide-react";
+import { Mail, Users, User } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
 const navigationItems = [
   {
-    icon: Store,
-    label: "角色广场",
-    path: "/character-square",
-    key: "character-square",
+    icon: Mail,
+    label: "我的明信片",
+    path: "/home",
+    key: "home"
   },
   {
-    icon: Mail,
+    icon: Users,
     label: "明信片广场",
-    path: "/postcard-square",
-    key: "postcard-square",
+    path: "/characters",
+    key: "characters"
   },
   {
     icon: User,
     label: "个人中心",
     path: "/profile",
-    key: "profile",
+    key: "profile"
   },
 ];
 
@@ -32,11 +32,18 @@ export default function BottomNavigation() {
 
   // 判断当前页面是否激活
   const isActive = (path: string) => {
-    if (path === "/character-square") {
+    if (path === "/home") {
+      return pathname === "/home" || pathname === "/";
+    }
+    if (path === "/characters") {
       return (
-        pathname === "/character-square" ||
-        pathname.startsWith("/character-detail")
+        pathname === "/characters" ||
+        pathname.startsWith("/character-detail") ||
+        pathname === "/character-square"
       );
+    }
+    if (path === "/profile") {
+      return pathname === "/profile" || pathname.startsWith("/profile");
     }
     return pathname === path || pathname.startsWith(path);
   };
@@ -46,11 +53,6 @@ export default function BottomNavigation() {
     router.push(path);
   };
 
-  // 处理快捷创建角色
-  const handleQuickCreate = () => {
-    router.push("/create-character");
-  };
-
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
@@ -58,8 +60,8 @@ export default function BottomNavigation() {
       transition={{ delay: 0.3 }}
       className="fixed bottom-0 w-full flex flex-col z-50"
     >
-      <div className="bg-[#FFFBF7] border-t border-[#F7E7CE]">
-        <nav className="flex justify-around items-center px-1 py-4 relative">
+      <div className="bg-white border-t border-gray-100">
+        <nav className="flex justify-around pt-standard px-1 pb-standard">
           {navigationItems.map((item) => (
             <motion.div
               key={item.key}
@@ -67,36 +69,26 @@ export default function BottomNavigation() {
               onClick={() => handleNavClick(item.path)}
               className="flex flex-col flex-1 items-center gap-1 cursor-pointer"
             >
-              <div className="w-6 h-6 flex items-center justify-center">
+              <div className="flex justify-center items-center w-6 h-6">
                 <item.icon
-                  className={`w-5 h-5 transition-colors ${
+                  className={`w-5 h-5 ${
                     isActive(item.path)
-                      ? "text-[#3D2914E6]"
-                      : "text-[#A68B6B80]"
+                      ? "text-primary-base"
+                      : "color-text-quaternary"
                   }`}
                 />
               </div>
               <span
-                className={`text-[10px] transition-colors ${
-                  isActive(item.path) ? "text-[#3D2914E6]" : "text-[#A68B6B80]"
+                className={`text-caption ${
+                  isActive(item.path) ? "text-primary-base" : "color-text-quaternary"
                 }`}
               >
                 {item.label}
               </span>
             </motion.div>
           ))}
-
-          {/* 快捷创建角色按钮 */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleQuickCreate}
-            className="absolute right-4 -top-24 w-12 h-12 bg-[#E07B39] rounded-full shadow-lg flex items-center justify-center"
-          >
-            <Plus className="w-6 h-6 text-white" />
-          </motion.button>
         </nav>
-        <div className="h-[env(safe-area-inset-bottom)]"></div>
+        <div style={{ height: 'env(safe-area-inset-bottom)' }}></div>
       </div>
     </motion.div>
   );

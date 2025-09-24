@@ -668,6 +668,98 @@ paths:
       summary: 更新角色
       tags:
       - 角色
+  /api/characters/{id}/favorite:
+    get:
+      description: 检查当前用户是否收藏了指定角色
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  properties:
+                    is_favorite:
+                      type: boolean
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 检查角色收藏状态
+      tags:
+      - 角色
+    post:
+      description: 收藏或取消收藏角色
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  properties:
+                    is_favorite:
+                      type: boolean
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: 切换角色收藏状态
+      tags:
+      - 角色
+  /api/characters/favorites:
+    get:
+      description: 获取当前用户收藏的所有角色
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PaginatedResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取收藏的角色列表
+      tags:
+      - 角色
   /api/characters/my:
     get:
       description: 获取当前用户创建的所有角色

@@ -1,304 +1,172 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "motion/react";
-import {
-  Settings,
-  Heart,
-  MessageCircle,
-  FileText,
-  Palette,
-  Eye,
-  Globe,
-  Type,
-  Moon,
-  MessageSquare,
-  Headphones,
-  Info,
-  Shield,
-  LogOut,
-  Camera,
-  ChevronRight,
-} from "lucide-react";
+import React from "react";
+import { Settings, Heart, User, Edit, LogOut, ChevronRight, Shield, Bell, Moon, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import BottomNavigation from "@/components/BottomNavigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AuthGuard } from "@/components/auth-guard";
+import { apiClient } from "@/lib/api";
+import type { User as UserType } from "@/types/api";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
-  const [darkMode, setDarkMode] = useState(false);
+  const router = useRouter();
+  const [user, setUser] = React.useState<UserType | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      const userData = await apiClient.getUserProfile();
+      setUser(userData);
+    } catch (error) {
+      console.error('Failed to load user profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_info');
+    router.push('/login');
+  };
+
+  // 统计数据（模拟数据）
+  const stats = [
+    { label: "我的角色", value: "12" },
+    { label: "明信片", value: "45" },
+    { label: "收藏", value: "89" }
+  ];
+
+  const menuItems = [
+    { icon: User, label: "我的角色", href: "/profile/characters" },
+    { icon: Heart, label: "我的收藏", href: "/profile/favorites" },
+    { icon: Shield, label: "账号安全", href: "/profile/security" },
+    { icon: Bell, label: "通知设置", href: "/profile/notifications" },
+    { icon: Trash2, label: "清除缓存", href: "/profile/clear-cache" }
+  ];
+
+  if (loading) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen flex items-center justify-center bg-page">
+          <div className="text-center">
+            <div className="w-8 h-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-4"></div>
+            <p className="text-muted-foreground">加载中...</p>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0]">
-      {/* 固定头部 */}
-      <motion.div
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="fixed top-0 w-full bg-[#FAF6F0] z-10"
-      >
-        <div className="h-[env(safe-area-inset-top)]"></div>
-        <header className="flex justify-between items-center h-14 px-6">
-          <h1 className="text-[#3D2914E6] text-xl font-semibold">个人中心</h1>
-          <div className="w-6 h-6 flex items-center justify-center">
-            <Settings className="w-5 h-5 text-[#8B7355B3]" />
+    <AuthGuard>
+      <div className="min-h-screen bg-page font-base pb-20">
+        {/* 顶部导航栏 */}
+        <nav className="fixed top-0 w-full z-50 glass-container-primary px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="w-8"></div>
+            <h1 className="text-lg font-semibold color-text-primary">个人中心</h1>
+            <button className="w-8 h-8 flex items-center justify-center">
+              <Settings className="w-5 h-5 color-text-primary" />
+            </button>
           </div>
-        </header>
-      </motion.div>
+        </nav>
 
-      {/* 占位空间 */}
-      <div>
-        <div className="h-[env(safe-area-inset-top)]"></div>
-        <div className="h-14"></div>
-      </div>
-
-      <main className="pt-4 pb-4">
-        {/* 用户信息卡片 */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-4 px-4"
-        >
-          <div className="bg-white/90 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="relative">
-                <img
-                  src="https://static.paraflowcontent.com/public/resource/image/b1b01e4c-966c-496c-af0c-d707c9812105.jpeg"
-                  alt="用户头像"
-                  className="size-14 rounded-full object-cover"
-                />
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#E07B39] rounded-full flex items-center justify-center">
-                  <Camera className="w-2.5 h-2.5 text-white" />
-                </div>
+        <main className="pt-[60px] pb-[80px] px-6">
+          {/* 用户信息卡片 */}
+          <div className="glass-container-primary rounded-xl p-4 mt-4 mb-4">
+            <div className="flex items-center">
+              <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden">
+                <Avatar className="w-full h-full">
+                  <AvatarImage src={user?.avatar_url || "https://ai-public.mastergo.com/ai/img_res/1051cdfdd43bc5d96a0f5ad137f4ff0b.jpg"} />
+                  <AvatarFallback>
+                    <User className="w-8 h-8" />
+                  </AvatarFallback>
+                </Avatar>
               </div>
-              <div className="flex-1">
-                <h2 className="text-[#3D2914E6] text-sm font-semibold mb-1">
-                  小卖部的常客
+              <div className="ml-4 flex-1">
+                <h2 className="text-base font-medium color-text-primary">
+                  {user?.nickname || user?.username || "陈梦琪"}
                 </h2>
-                <p className="text-[#5C4A39CC] text-xs">
-                  喜欢收集回忆，热爱分享故事
+                <p className="text-sm color-text-secondary mt-1">
+                  {user?.signature || "热爱生活，享受当下的每一刻✨"}
                 </p>
-              </div>
-              <button className="bg-[#F4E4D699] text-[#E07B39] px-3 py-1.5 rounded-lg text-xs">
-                编辑
-              </button>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* 明信片统计 */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-4 px-4"
-        >
-          <div className="bg-white/90 rounded-2xl p-4 backdrop-blur-sm">
-            <h3 className="text-[#3D2914E6] text-sm font-semibold mb-3">
-              我的明信片统计
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-[#E07B39] text-xl font-semibold mb-1">
-                  42
-                </div>
-                <div className="text-[#8B7355B3] text-xs">发出明信片</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[#E07B39] text-xl font-semibold mb-1">
-                  38
-                </div>
-                <div className="text-[#8B7355B3] text-xs">收到回信</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[#E07B39] text-xl font-semibold mb-1">
-                  25
-                </div>
-                <div className="text-[#8B7355B3] text-xs">收藏明信片</div>
-              </div>
-              <div className="text-center">
-                <div className="text-[#E07B39] text-xl font-semibold mb-1">
-                  12
-                </div>
-                <div className="text-[#8B7355B3] text-xs">通信角色</div>
-              </div>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* 功能入口 */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-4 px-4"
-        >
-          <div className="bg-white/90 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="grid grid-cols-2 gap-4">
-              <button className="bg-[#F4E4D699] flex flex-col items-center p-3 rounded-xl">
-                <div className="w-8 h-8 bg-[#E07B39] rounded-full flex items-center justify-center mb-2">
-                  <Heart className="w-3.5 h-3.5 text-white" />
-                </div>
-                <span className="text-[#3D2914E6] text-xs">我的收藏</span>
-              </button>
-
-              <button className="bg-[#F4E4D699] flex flex-col items-center p-3 rounded-xl">
-                <div className="w-8 h-8 bg-[#8FBF47] rounded-full flex items-center justify-center mb-2">
-                  <MessageCircle className="w-3.5 h-3.5 text-white" />
-                </div>
-                <span className="text-[#3D2914E6] text-xs">通信记录</span>
-              </button>
-
-              <button className="bg-[#F4E4D699] flex flex-col items-center p-3 rounded-xl">
-                <div className="w-8 h-8 bg-[#F2CC8F] rounded-full flex items-center justify-center mb-2">
-                  <FileText className="w-3.5 h-3.5 text-white" />
-                </div>
-                <span className="text-[#3D2914E6] text-xs">草稿箱</span>
-              </button>
-
-              <button className="bg-[#F4E4D699] flex flex-col items-center p-3 rounded-xl">
-                <div className="w-8 h-8 bg-[#6B8CAE] rounded-full flex items-center justify-center mb-2">
-                  <Palette className="w-3.5 h-3.5 text-white" />
-                </div>
-                <span className="text-[#3D2914E6] text-xs">明信片模板</span>
-              </button>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* 设置选项 */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-4 px-4"
-        >
-          <div className="bg-white/90 rounded-2xl p-4 backdrop-blur-sm">
-            <h3 className="text-[#3D2914E6] text-sm font-semibold mb-3">
-              设置
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <Eye className="w-5 h-5 text-[#8B7355B3]" />
-                  <span className="text-[#3D2914E6] text-xs">明信片可见性</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-[#8B7355B3] text-[10px] mr-1">
-                    公开
-                  </span>
-                  <ChevronRight className="w-2.5 h-2.5 text-[#8B7355B3]" />
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-[#8B7355B3]" />
-                  <span className="text-[#3D2914E6] text-xs">语言设置</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-[#8B7355B3] text-[10px] mr-1">
-                    中文
-                  </span>
-                  <ChevronRight className="w-2.5 h-2.5 text-[#8B7355B3]" />
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <Type className="w-5 h-5 text-[#8B7355B3]" />
-                  <span className="text-[#3D2914E6] text-xs">字体大小</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-[#8B7355B3] text-[10px] mr-1">
-                    标准
-                  </span>
-                  <ChevronRight className="w-2.5 h-2.5 text-[#8B7355B3]" />
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <Moon className="w-5 h-5 text-[#8B7355B3]" />
-                  <span className="text-[#3D2914E6] text-xs">深色模式</span>
-                </div>
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className={`relative w-10 h-6 rounded-full transition-colors ${
-                    darkMode ? "bg-[#E07B39]" : "bg-[#E6D5C3]"
-                  }`}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 px-4 py-1 border border-primary text-primary rounded-md text-sm"
+                  onClick={() => router.push('/profile/edit')}
                 >
-                  <div
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                      darkMode ? "translate-x-5" : "translate-x-1"
-                    }`}
-                  />
-                </button>
+                  编辑资料
+                </Button>
               </div>
             </div>
+            {JSON.stringify(user)}
           </div>
-        </motion.section>
 
-        {/* 帮助与支持 */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mb-4 px-4"
-        >
-          <div className="bg-white/90 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <MessageSquare className="w-5 h-5 text-[#8B7355B3]" />
-                  <span className="text-[#3D2914E6] text-xs">意见反馈</span>
-                </div>
-                <ChevronRight className="w-2.5 h-2.5 text-[#8B7355B3]" />
+          
+          {/* 统计数据 */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            {stats.map((stat, index) => (
+              <div key={index} className="glass-container-primary rounded-lg p-4 text-center">
+                <div className="text-xl font-medium text-primary">{stat.value}</div>
+                <div className="text-sm color-text-secondary mt-1">{stat.label}</div>
               </div>
+            ))}
+          </div>
 
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <Headphones className="w-5 h-5 text-[#8B7355B3]" />
-                  <span className="text-[#3D2914E6] text-xs">联系客服</span>
-                </div>
-                <ChevronRight className="w-2.5 h-2.5 text-[#8B7355B3]" />
-              </div>
+          {/* 功能菜单 */}
+          <div className="glass-container-primary rounded-xl mb-6">
+            {menuItems.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <React.Fragment key={item.href}>
+                  <button
+                    onClick={() => router.push(item.href)}
+                    className="w-full p-4 flex items-center space-x-4"
+                  >
+                    <Icon className="w-5 h-5 color-text-primary" />
+                    <span className="color-text-primary flex-1 text-left">{item.label}</span>
+                    <ChevronRight className="w-4 h-4 color-text-tertiary ml-auto" />
+                  </button>
+                  {index < menuItems.length - 1 && (
+                    <div className="h-[1px] bg-border/50"></div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
 
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <Info className="w-5 h-5 text-[#8B7355B3]" />
-                  <span className="text-[#3D2914E6] text-xs">关于我们</span>
-                </div>
-                <ChevronRight className="w-2.5 h-2.5 text-[#8B7355B3]" />
-              </div>
+          {/* 深色模式切换 */}
+          <div className="glass-container-primary rounded-xl mb-6">
+            <div className="p-4 flex items-center space-x-4">
+              <Moon className="w-5 h-5 color-text-primary" />
+              <span className="color-text-primary flex-1">深色模式</span>
+              <ThemeToggle />
             </div>
           </div>
-        </motion.section>
 
-        {/* 账户管理 */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="px-4"
-        >
-          <div className="bg-white/90 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-[#8B7355B3]" />
-                  <span className="text-[#3D2914E6] text-xs">账户安全</span>
-                </div>
-                <ChevronRight className="w-2.5 h-2.5 text-[#8B7355B3]" />
-              </div>
+          {/* 退出登录 */}
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full glass-container-primary text-destructive hover:text-destructive"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            退出登录
+          </Button>
+        </main>
 
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <LogOut className="w-5 h-5 text-[#D4614A]" />
-                  <span className="text-[#D4614A] text-xs">退出登录</span>
-                </div>
-                <ChevronRight className="w-2.5 h-2.5 text-[#D4614A]" />
-              </div>
-            </div>
-          </div>
-        </motion.section>
-      </main>
-    </div>
+        {/* 底部导航 */}
+        <BottomNavigation />
+      </div>
+    </AuthGuard>
   );
 }

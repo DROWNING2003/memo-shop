@@ -27,7 +27,7 @@ func NewCharacterService(db *gorm.DB, redis *redis.Client) *CharacterService {
 // CreateCharacter 创建角色
 func (s *CharacterService) CreateCharacter(userID uint, req *models.CharacterCreateRequest) (*models.Character, error) {
 	character := models.Character{
-		CreatorID:    &userID,
+		CreatorID:    userID,
 		Name:         req.Name,
 		Description:  req.Description,
 		AvatarURL:    req.AvatarURL,
@@ -58,7 +58,7 @@ func (s *CharacterService) GetCharacter(id uint, userID *uint) (*models.Characte
 	// 先从缓存获取
 	if character := s.getCharacterFromCache(id); character != nil {
 		// 检查权限
-		if character.Visibility == "private" && (userID == nil || character.CreatorID == nil || *character.CreatorID != *userID) {
+		if character.Visibility == "private" && (userID == nil || character.CreatorID != *userID) {
 			return nil, errors.New("character not found")
 		}
 		return character, nil
@@ -75,7 +75,7 @@ func (s *CharacterService) GetCharacter(id uint, userID *uint) (*models.Characte
 	}
 
 	// 检查权限
-	if character.Visibility == "private" && (userID == nil || character.CreatorID == nil || *character.CreatorID != *userID) {
+	if character.Visibility == "private" && (userID == nil || character.CreatorID != *userID) {
 		return nil, errors.New("character not found")
 	}
 
@@ -162,7 +162,7 @@ func (s *CharacterService) UpdateCharacter(id uint, userID uint, req *models.Cha
 	}
 
 	// 检查权限
-	if character.CreatorID == nil || *character.CreatorID != userID {
+	if character.CreatorID != userID {
 		return nil, errors.New("permission denied")
 	}
 
@@ -214,7 +214,7 @@ func (s *CharacterService) DeleteCharacter(id uint, userID uint) error {
 	}
 
 	// 检查权限
-	if character.CreatorID == nil || *character.CreatorID != userID {
+	if character.CreatorID != userID {
 		return errors.New("permission denied")
 	}
 
@@ -240,6 +240,96 @@ func (s *CharacterService) IncrementUsageCount(id uint) error {
 	s.clearCharacterCache(id)
 
 	return nil
+}
+
+// ToggleFavorite 切换收藏状态
+func (s *CharacterService) ToggleFavorite(userID uint, characterID uint) (bool, error) {
+	var relation models.UserCharacterRelation
+
+	// 查找或创建用户角色关系
+	result := s.db.Where("user_id = ? AND character_id = ?", userID, characterID).First(&relation)
+
+	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// 创建新的关系记录
+		relation = models.UserCharacterRelation{
+			UserID:      userID,
+			CharacterID: characterID,
+			IsFavorite:  true,
+		}
+		if err := s.db.Create(&relation).Error; err != nil {
+			return false, fmt.Errorf("failed to create favorite relation: %w", err)
+		}
+		return true, nil
+	} else if result.Error != nil {
+		return false, fmt.Errorf("failed to get relation: %w", result.Error)
+	}
+
+	// 切换收藏状态
+	relation.IsFavorite = !relation.IsFavorite
+	if err := s.db.Save(&relation).Error; err != nil {
+		return false, fmt.Errorf("failed to update favorite status: %w", err)
+	}
+
+	// 清除相关缓存
+	s.clearCharacterCache(characterID)
+	s.clearCharacterListCache()
+
+	return relation.IsFavorite, nil
+}
+
+// GetFavoriteCharacters 获取用户收藏的角色列表
+func (s *CharacterService) GetFavoriteCharacters(userID uint, page int, pageSize int) (*models.PaginatedResponse, error) {
+	var relations []models.UserCharacterRelation
+	var total int64
+
+	// 计算总数
+	if err := s.db.Model(&models.UserCharacterRelation{}).
+		Where("user_id = ? AND is_favorite = ?", userID, true).
+		Count(&total).Error; err != nil {
+		return nil, fmt.Errorf("failed to count favorite characters: %w", err)
+	}
+
+	// 获取收藏关系
+	offset := (page - 1) * pageSize
+	if err := s.db.Where("user_id = ? AND is_favorite = ?", userID, true).
+		Preload("Character").
+		Preload("Character.Creator").
+		Order("updated_at DESC").
+		Offset(offset).
+		Limit(pageSize).
+		Find(&relations).Error; err != nil {
+		return nil, fmt.Errorf("failed to get favorite characters: %w", err)
+	}
+
+	// 提取角色信息
+	characters := make([]models.Character, len(relations))
+	for i, relation := range relations {
+		characters[i] = relation.Character
+	}
+
+	result := &models.PaginatedResponse{
+		Items:      characters,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: int((total + int64(pageSize) - 1) / int64(pageSize)),
+	}
+
+	return result, nil
+}
+
+// IsCharacterFavorite 检查角色是否被用户收藏
+func (s *CharacterService) IsCharacterFavorite(userID uint, characterID uint) (bool, error) {
+	var relation models.UserCharacterRelation
+	err := s.db.Where("user_id = ? AND character_id = ?", userID, characterID).First(&relation).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	} else if err != nil {
+		return false, fmt.Errorf("failed to check favorite status: %w", err)
+	}
+
+	return relation.IsFavorite, nil
 }
 
 // 缓存相关方法

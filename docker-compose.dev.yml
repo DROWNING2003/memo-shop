@@ -1,23 +1,23 @@
-version: "3.8"
+version: '3.8'
 
 services:
   # MySQL Database
   mysql:
     image: mysql:8.0
-    container_name: ten-agent-mysql-dev
+    container_name: ten-agent-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: ten_agent_dev
+      MYSQL_DATABASE: ten_agent
       MYSQL_USER: ten_user
       MYSQL_PASSWORD: ten_password
     ports:
       - "3306:3306"
     volumes:
-      - mysql_dev_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
-      - ten-agent-dev-network
+      - ten-agent-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
@@ -26,16 +26,37 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: ten-agent-redis-dev
+    container_name: ten-agent-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
-      - redis_dev_data:/data
+      - redis_data:/data
     networks:
-      - ten-agent-dev-network
+      - ten-agent-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ten-agent-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - ten-agent-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -43,7 +64,7 @@ services:
   # MinIO Object Storage
   minio:
     image: minio/minio:latest
-    container_name: ten-agent-minio-dev
+    container_name: ten-agent-minio
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -52,9 +73,9 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - minio_dev_data:/data
+      - minio_data:/data
     networks:
-      - ten-agent-dev-network
+      - ten-agent-network
     command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -62,68 +83,84 @@ services:
       timeout: 20s
       retries: 3
 
-  # Backend API Service
+  # Backend Service
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: memory-postcard-backend-dev
+    container_name: ten-agent-backend
     restart: unless-stopped
+    ports:
+      - "8080:8080"
     environment:
-      # 数据库配置
+      # Database
       DB_HOST: mysql
       DB_PORT: 3306
+      DB_NAME: ten_agent
       DB_USER: ten_user
       DB_PASSWORD: ten_password
-      DB_NAME: ten_agent_dev
-
-      # Redis 配置
+      
+      # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ""
-
-      # MinIO 配置
+      
+      # MinIO
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin123
-      MINIO_BUCKET_NAME: ten-agent-bucket
       MINIO_USE_SSL: "false"
-
-      # JWT 配置
-      JWT_SECRET: "memory-postcard-dev-secret-key-2024"
-
-      # 应用配置
+      MINIO_BUCKET: ten-agent-bucket
+      
+      # RabbitMQ
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      
+      # Application
       PORT: 8080
-      ENVIRONMENT: development
-
-      # AI 服务配置（可选）
-      OPENAI_API_KEY: ""
-      OPENAI_BASE_URL: "https://api.openai.com/v1"
-    ports:
-      - "8080:8080"
+      GIN_MODE: release
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       minio:
         condition: service_healthy
     networks:
-      - ten-agent-dev-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - ten-agent-network
+
+  # Frontend Service
+  # frontend:
+  #   build:
+  #     context: ./fronted
+  #     dockerfile: Dockerfile
+  #   container_name: ten-agent-frontend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     AGENT_SERVER_URL: http://backend:8080
+  #     TEN_DEV_SERVER_URL: http://backend:8080
+  #     NEXT_PUBLIC_EDIT_GRAPH_MODE: "true"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - ten-agent-network
 
 volumes:
-  mysql_dev_data:
+  mysql_data:
     driver: local
-  redis_dev_data:
+  redis_data:
     driver: local
-  minio_dev_data:
+  rabbitmq_data:
+    driver: local
+  minio_data:
     driver: local
 
 networks:
-  ten-agent-dev-network:
+  ten-agent-network:
     driver: bridge

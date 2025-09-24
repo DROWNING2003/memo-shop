@@ -1,6 +1,9 @@
 # 构建阶段
 FROM golang:1.23-alpine AS builder
 
+# 设置 GOPROXY 环境变量加速依赖下载
+ENV GOPROXY=https://goproxy.io,direct
+
 # 设置工作目录
 WORKDIR /app
 

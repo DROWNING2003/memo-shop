@@ -24,26 +24,25 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 }
 
+import { ThemeProvider } from "@/components/theme-provider"
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="dark">
-        {/* <ConfigProvider
-          theme={{
-            components: {
-              Select: {
-                selectorBg: "#181A1D",
-              },
-            },
-          }}
-        > */}
-        <StoreProvider>{children}</StoreProvider>
-        {/* </ConfigProvider> */}
-        <Toaster richColors closeButton theme="dark" />
+    <html lang="zh-CN" suppressHydrationWarning>
+      <body>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+          <StoreProvider>{children}</StoreProvider>
+          <Toaster richColors closeButton />
+        </ThemeProvider>
       </body>
     </html>
   )

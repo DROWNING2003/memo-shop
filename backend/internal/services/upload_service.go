@@ -182,6 +182,12 @@ func (s *UploadService) DeleteFile(objectName string) error {
 
 // generateURL 生成文件访问 URL
 func (s *UploadService) generateURL(objectName string) string {
+	// 如果配置了公共访问基础URL，则使用该URL
+	if s.config.MinIOPublicBaseURL != "" {
+		return fmt.Sprintf("%s/%s/%s", s.config.MinIOPublicBaseURL, s.config.MinIOBucketName, objectName)
+	}
+
+	// 否则使用内部端点（仅适用于内部访问）
 	protocol := "http"
 	if s.config.MinIOUseSSL {
 		protocol = "https"
