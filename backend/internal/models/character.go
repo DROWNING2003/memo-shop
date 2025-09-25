@@ -13,6 +13,7 @@ type Character struct {
 	Description     string  `json:"description" gorm:"type:text;not null"`
 	AvatarURL       string  `json:"avatar_url" gorm:"size:255"`
 	VoiceURL        string  `json:"voice_url" gorm:"size:255"` // 音色URL字段
+	VoiceID         string  `json:"voice_id" gorm:"size:100"`  // 音色ID字段，用于AI生成声音
 	Visibility      string  `json:"visibility" gorm:"type:enum('private','public');default:'public'"`
 	IsActive        bool    `json:"is_active" gorm:"default:true"`
 	UsageCount      int     `json:"usage_count" gorm:"default:0"`
@@ -52,10 +53,11 @@ type CharacterCreateRequest struct {
 	Name         string `json:"name" binding:"required,max=100"`
 	Description  string `json:"description" binding:"required"`
 	AvatarURL    string `json:"avatar_url" binding:"max=255"`
+	VoiceURL     string `json:"voice_url" binding:"max=255"`
+	VoiceID      string `json:"voice_id" binding:"max=100"` // 音色ID字段，用于AI生成声音
 	Visibility   string `json:"visibility" binding:"oneof=private public"`
 	UserRoleName string `json:"user_role_name" binding:"required,max=50"`
 	UserRoleDesc string `json:"user_role_desc" binding:"required,max=200"`
-	VoiceURL     string `json:"voice_url" binding:"max=255"`
 }
 
 type CharacterUpdateRequest struct {
@@ -63,6 +65,7 @@ type CharacterUpdateRequest struct {
 	Description  string `json:"description"`
 	AvatarURL    string `json:"avatar_url" binding:"max=255"`
 	VoiceURL     string `json:"voice_url" binding:"max=255"` // 音色URL字段
+	VoiceID      string `json:"voice_id" binding:"max=100"`  // 音色ID字段，用于AI生成声音
 	Visibility   string `json:"visibility" binding:"oneof=private public"`
 	IsActive     *bool  `json:"is_active"`
 	UserRoleName string `json:"user_role_name" binding:"max=50"`

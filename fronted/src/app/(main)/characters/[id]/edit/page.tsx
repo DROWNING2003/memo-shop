@@ -26,6 +26,7 @@ export default function EditCharacterPage() {
   const [dialogTitle, setDialogTitle] = React.useState("");
   const [dialogDescription, setDialogDescription] = React.useState("");
   const [voiceUrl, setVoiceUrl] = React.useState("");
+  const [voiceId, setVoiceId] = React.useState("");
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [audioRef] = React.useState(React.createRef<HTMLAudioElement>());
   
@@ -58,6 +59,7 @@ export default function EditCharacterPage() {
           is_active: characterData.is_active
         });
         setVoiceUrl(characterData.voice_url || "");
+        setVoiceId(characterData.voice_id || "");
       } catch (error) {
         console.error('Failed to load character:', error);
         showDialog('加载失败', '角色信息加载失败，请重试');
@@ -136,10 +138,11 @@ export default function EditCharacterPage() {
 
     setLoading(true);
     try {
-      // 将音色URL添加到表单数据中
+      // 将音色URL和音色ID添加到表单数据中
       const submitData = {
         ...formData,
-        voice_url: voiceUrl || undefined
+        voice_url: voiceUrl || undefined,
+        voice_id: voiceId || undefined
       };
       
       await apiClient.updateCharacter(characterId, submitData);

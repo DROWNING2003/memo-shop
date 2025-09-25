@@ -15,6 +15,7 @@ type Postcard struct {
 	Content             string         `json:"content" gorm:"type:text;not null"`
 	ImageURL            string         `json:"image_url" gorm:"size:255"`
 	AIGeneratedImageURL string         `json:"ai_generated_image_url" gorm:"size:255"`
+	VoiceURL            string         `json:"voice_url" gorm:"size:255"`
 	PostcardTemplate    string         `json:"postcard_template" gorm:"size:100"`
 	Status              string         `json:"status" gorm:"type:enum('draft','sent','delivered','read');default:'sent'"`
 	IsFavorite          bool           `json:"is_favorite" gorm:"default:false"`
@@ -57,6 +58,7 @@ type PostcardCreateRequest struct {
 	Type             string `json:"type" binding:"required,oneof=user ai"`
 	Content          string `json:"content" binding:"required"`
 	ImageURL         string `json:"image_url" binding:"max=255"`
+	VoiceURL         string `json:"voice_url" binding:"max=255"`
 	PostcardTemplate string `json:"postcard_template" binding:"max=100"`
 	ConversationID   string `json:"conversation_id" binding:"max=36"`
 }
@@ -64,6 +66,7 @@ type PostcardCreateRequest struct {
 type PostcardUpdateRequest struct {
 	Content          string `json:"content"`
 	ImageURL         string `json:"image_url" binding:"max=255"`
+	VoiceURL         string `json:"voice_url" binding:"max=255"`
 	PostcardTemplate string `json:"postcard_template" binding:"max=100"`
 	Status           string `json:"status" binding:"oneof=draft sent delivered read"`
 	IsFavorite       *bool  `json:"is_favorite"`

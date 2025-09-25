@@ -4,6 +4,7 @@ export interface Character {
   description: string;
   avatar_url?: string;
   voice_url?: string;
+  voice_id?: string; // 音色ID字段，用于AI生成声音
   user_role_name: string;
   user_role_desc: string;
   visibility: 'private' | 'public';

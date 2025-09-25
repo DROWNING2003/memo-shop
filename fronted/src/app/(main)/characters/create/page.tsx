@@ -24,6 +24,7 @@ export default function CreateCharacterPage() {
   const [dialogTitle, setDialogTitle] = React.useState("");
   const [dialogDescription, setDialogDescription] = React.useState("");
   const [voiceUrl, setVoiceUrl] = React.useState("");
+  const [voiceId, setVoiceId] = React.useState("");
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [audioRef] = React.useState(React.createRef<HTMLAudioElement>());
   
@@ -99,10 +100,11 @@ export default function CreateCharacterPage() {
 
     setLoading(true);
     try {
-      // 将音色URL添加到表单数据中
+      // 将音色URL和音色ID添加到表单数据中
       const submitData = {
         ...formData,
-        voice_url: voiceUrl || undefined
+        voice_url: voiceUrl || undefined,
+        voice_id: voiceId || undefined
       };
       
       await apiClient.createCharacter(submitData);
@@ -122,7 +124,10 @@ export default function CreateCharacterPage() {
     router.back();
   };
 
-  const togglePlay = () => {
+  const togglePlay = (e: React.MouseEvent) => {
+    e.preventDefault(); // 阻止默认行为
+    e.stopPropagation(); // 阻止事件冒泡
+    
     if (!voiceUrl) return;
 
     if (isPlaying) {
@@ -138,7 +143,9 @@ export default function CreateCharacterPage() {
     setIsPlaying(false);
   };
 
-  const handleRemoveVoice = () => {
+  const handleRemoveVoice = (e: React.MouseEvent) => {
+    e.preventDefault(); // 阻止默认行为
+    e.stopPropagation(); // 阻止事件冒泡
     setVoiceUrl("");
     setIsPlaying(false);
   };
@@ -290,6 +297,21 @@ export default function CreateCharacterPage() {
           <div className="glass-container-primary rounded-xl p-6">
             <Label className="text-sm font-medium color-text-primary mb-4 block">角色音色</Label>
             <div className="space-y-4">
+              {/* 音色ID输入 */}
+              <div className="space-y-2">
+                <Label htmlFor="voice-id" className="text-sm color-text-primary">
+                  音色ID（可选）
+                </Label>
+                <Input
+                  id="voice-id"
+                  value={voiceId}
+                  onChange={(e) => setVoiceId(e.target.value)}
+                  placeholder="输入AI音色ID，用于生成声音"
+                  className="bg-container-secondary border-0"
+                />
+                <p className="text-xs color-text-secondary">用于AI生成声音的音色标识符</p>
+              </div>
+
               {voiceUrl ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 bg-container-secondary rounded-lg">
@@ -304,7 +326,7 @@ export default function CreateCharacterPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={togglePlay}
+                        onClick={(e) => togglePlay(e)}
                         className="neumorphism"
                       >
                         {isPlaying ? (
@@ -322,7 +344,7 @@ export default function CreateCharacterPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={handleRemoveVoice}
+                        onClick={(e) => handleRemoveVoice(e)}
                         className="neumorphism"
                       >
                         移除

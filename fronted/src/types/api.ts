@@ -71,6 +71,7 @@ export interface CharacterCreateRequest {
   user_role_desc: string;
   avatar_url?: string;
   voice_url?: string;
+  voice_id?: string; // 音色ID字段，用于AI生成声音
   visibility?: 'private' | 'public';
 }
 
@@ -85,6 +86,7 @@ export interface Postcard {
   user?: User;
   image_url?: string;
   ai_generated_image_url?: string;
+  voice_url?: string;
   postcard_template?: string;
   type: 'user' | 'ai'; // 新增的type字段，表示明信片类型
   status: 'draft' | 'sent' | 'delivered' | 'read';
@@ -98,6 +100,7 @@ export interface PostcardCreateRequest {
   content: string;
   conversation_id?: string;
   image_url?: string;
+  voice_url?: string;
   postcard_template?: string;
   type?: 'user' | 'ai'; // 新增的type字段
 }
@@ -105,6 +108,7 @@ export interface PostcardCreateRequest {
 export interface PostcardUpdateRequest {
   content?: string;
   image_url?: string;
+  voice_url?: string;
   postcard_template?: string;
   type?: 'user' | 'ai'; // 新增的type字段
   status?: 'draft' | 'sent' | 'delivered' | 'read';
@@ -142,6 +146,7 @@ export interface CharacterUpdateRequest {
   user_role_desc?: string;
   avatar_url?: string;
   voice_url?: string;
+  voice_id?: string; // 音色ID字段，用于AI生成声音
   is_active?: boolean;
   visibility?: 'private' | 'public';
 }

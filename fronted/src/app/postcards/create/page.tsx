@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowLeft, Send, Image, Sparkles, Search, Heart, Star } from "lucide-react";
+import { ArrowLeft, Send, Image, Sparkles, Search, Heart, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AuthGuard } from "@/components/auth-guard";
@@ -25,6 +25,8 @@ export default function CreatePostcardPage() {
   const [favoriteCharacters, setFavoriteCharacters] = React.useState<Character[]>([]);
   const [allCharacters, setAllCharacters] = React.useState<Character[]>([]);
   const [charactersLoading, setCharactersLoading] = React.useState(false);
+  const [imageUrl, setImageUrl] = React.useState<string | null>(null);
+  const [uploading, setUploading] = React.useState(false);
 
   React.useEffect(() => {
     if (characterId) {
@@ -59,6 +61,7 @@ export default function CreatePostcardPage() {
       await apiClient.createPostcard({
         character_id: character.id,
         content: content.trim(),
+        image_url: imageUrl || undefined,
         type: 'user' // 用户发送的明信片类型为 'user'
       });
       
@@ -110,6 +113,48 @@ export default function CreatePostcardPage() {
   const handleCloseDialog = () => {
     setShowCharacterDialog(false);
     setSearchQuery("");
+  };
+
+  // 处理图片上传
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // 检查文件类型
+    if (!file.type.startsWith('image/')) {
+      alert('请选择图片文件');
+      return;
+    }
+
+    // 检查文件大小（限制为5MB）
+    if (file.size > 5 * 1024 * 1024) {
+      alert('图片大小不能超过5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await apiClient.uploadImage(file);
+      setImageUrl(response.url);
+    } catch (error) {
+      console.error('图片上传失败:', error);
+      alert('图片上传失败，请重试');
+    } finally {
+      setUploading(false);
+      // 重置文件输入
+      event.target.value = '';
+    }
+  };
+
+  // 移除已上传的图片
+  const handleRemoveImage = () => {
+    setImageUrl(null);
+  };
+
+  // 触发文件选择
+  const handleAddImageClick = () => {
+    const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+    fileInput?.click();
   };
 
   return (
@@ -207,14 +252,54 @@ export default function CreatePostcardPage() {
                 className="w-full h-40 p-4 rounded-xl bg-background/50 border-0 resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 text-foreground placeholder:text-muted-foreground"
               />
               
+              {/* 已上传的图片预览 */}
+              {imageUrl && (
+                <div className="relative">
+                  <div className="relative w-full max-w-xs mx-auto">
+                    <img
+                      src={imageUrl}
+                      alt="上传的图片"
+                      className="w-full h-auto rounded-lg object-cover max-h-48"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleRemoveImage}
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* 图片上传按钮和文件输入 */}
               <div className="flex items-center space-x-2">
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={handleAddImageClick}
+                  disabled={uploading}
                   className="neumorphism"
                 >
-                  <Image className="w-4 h-4 mr-2" />
-                  添加图片
+                  {uploading ? (
+                    <>
+                      <div className="w-4 h-4 mr-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      上传中...
+                    </>
+                  ) : (
+                    <>
+                      <Image className="w-4 h-4 mr-2" />
+                      {imageUrl ? '更换图片' : '添加图片'}
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

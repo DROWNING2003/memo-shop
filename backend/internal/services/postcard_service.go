@@ -53,6 +53,7 @@ func (s *PostcardService) CreatePostcard(userID uint, req *models.PostcardCreate
 		Type:             req.Type,
 		Content:          req.Content,
 		ImageURL:         req.ImageURL,
+		VoiceURL:         req.VoiceURL,
 		PostcardTemplate: req.PostcardTemplate,
 		Status:           "sent",
 	}
@@ -170,6 +171,9 @@ func (s *PostcardService) UpdatePostcard(id uint, userID uint, req *models.Postc
 	}
 	if req.ImageURL != "" {
 		postcard.ImageURL = req.ImageURL
+	}
+	if req.VoiceURL != "" {
+		postcard.VoiceURL = req.VoiceURL
 	}
 	if req.PostcardTemplate != "" {
 		postcard.PostcardTemplate = req.PostcardTemplate

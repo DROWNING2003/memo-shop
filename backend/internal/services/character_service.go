@@ -31,7 +31,8 @@ func (s *CharacterService) CreateCharacter(userID uint, req *models.CharacterCre
 		Name:         req.Name,
 		Description:  req.Description,
 		AvatarURL:    req.AvatarURL,
-		VoiceURL:     req.VoiceURL, // 直接设置音色URL
+		VoiceURL:     req.VoiceURL, // 音色URL字段
+		VoiceID:      req.VoiceID,  // 音色ID字段，用于AI生成声音
 		Visibility:   req.Visibility,
 		UserRoleName: req.UserRoleName,
 		UserRoleDesc: req.UserRoleDesc,

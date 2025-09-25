@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Share2, Play } from "lucide-react";
+import { Share2, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Postcard } from "@/types/api";
 
@@ -10,7 +10,12 @@ interface PostcardPreviewProps {
   className?: string;
 }
 
+// 全局音频实例和播放状态管理
+let globalAudio: HTMLAudioElement | null = null;
+let currentPlayingPostcardId: number | null = null;
+
 export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
+  const [isPlaying, setIsPlaying] = React.useState(false);
   // 格式化日期
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -57,9 +62,78 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
   // 处理播放按钮点击
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // 这里可以添加播放逻辑
-    console.log("播放明信片:", postcard.id);
+    
+    if (!postcard.voice_url) {
+      console.log("明信片没有声音文件");
+      return;
+    }
+
+    // 如果当前正在播放的是这个明信片，则暂停
+    if (currentPlayingPostcardId === postcard.id && isPlaying) {
+      if (globalAudio) {
+        globalAudio.pause();
+        setIsPlaying(false);
+        console.log("暂停播放");
+      }
+      return;
+    }
+
+    // 如果正在播放其他明信片，先停止
+    if (globalAudio && currentPlayingPostcardId !== postcard.id) {
+      globalAudio.pause();
+      // 通知其他组件停止播放
+      const event = new CustomEvent('audioStopped', { detail: { postcardId: currentPlayingPostcardId } });
+      window.dispatchEvent(event);
+    }
+
+    // 创建新的音频实例
+    globalAudio = new Audio(postcard.voice_url);
+    currentPlayingPostcardId = postcard.id;
+    setIsPlaying(true);
+
+    // 设置音频事件监听
+    globalAudio.onended = () => {
+      setIsPlaying(false);
+      currentPlayingPostcardId = null;
+      globalAudio = null;
+    };
+
+    globalAudio.onpause = () => {
+      setIsPlaying(false);
+    };
+
+    globalAudio.onerror = (error) => {
+      console.error("播放失败:", error);
+      setIsPlaying(false);
+      currentPlayingPostcardId = null;
+      globalAudio = null;
+    };
+
+    // 播放音频
+    globalAudio.play().catch(error => {
+      console.error("播放失败:", error);
+      setIsPlaying(false);
+      currentPlayingPostcardId = null;
+      globalAudio = null;
+    });
+
+    console.log("播放明信片声音:", postcard.voice_url);
   };
+
+  // 监听其他组件的停止事件
+  React.useEffect(() => {
+    const handleAudioStopped = (event: CustomEvent) => {
+      if (event.detail.postcardId !== postcard.id) {
+        setIsPlaying(false);
+      }
+    };
+
+    window.addEventListener('audioStopped', handleAudioStopped as EventListener);
+    
+    return () => {
+      window.removeEventListener('audioStopped', handleAudioStopped as EventListener);
+    };
+  }, [postcard.id]);
 
   const content = postcard.content || "在这片宁静的湖畔，夕阳为群山镀上金边，美得令人屏息。大自然的鬼斧神工总能让人感叹不已。愿这份静谧的美景能带给你片刻的宁静与感动。";
 
@@ -107,7 +181,7 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
                   onClick={handlePlay}
                   className="text-black opacity-75 hover:opacity-100 transition-opacity rounded-md p-1 hover:bg-gray-100"
                 >
-                  <Play className="w-4 h-4" />
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </button>
               )}
               <button 
