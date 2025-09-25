@@ -5,6 +5,7 @@ import {
   VoiceType,
   ITrulienceSettings,
 } from "@/types";
+import { Character, Postcard } from "@/types/api";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   EMobileActiveTab,
@@ -44,6 +45,11 @@ export interface InitialState {
   addonModules: AddonDef.Module[]; // addon modules
   mobileActiveTab: EMobileActiveTab;
   trulienceSettings: ITrulienceSettings;
+  // 新增状态：角色信息和明信片
+  currentCharacter: Character | null;
+  recentPostcards: Postcard[];
+  characterLoading: boolean;
+  postcardsLoading: boolean;
 }
 
 const getInitialState = (): InitialState => {
@@ -62,6 +68,11 @@ const getInitialState = (): InitialState => {
     addonModules: [],
     mobileActiveTab: EMobileActiveTab.AGENT,
     trulienceSettings: DEFAULT_TRULIENCE_OPTIONS,
+    // 新增状态初始化
+    currentCharacter: null,
+    recentPostcards: [],
+    characterLoading: false,
+    postcardsLoading: false,
   };
 };
 
@@ -179,6 +190,22 @@ export const globalSlice = createSlice({
     },
     setAddonModules: (state, action: PayloadAction<Record<string, any>[]>) => {
       state.addonModules = JSON.parse(JSON.stringify(action.payload));
+    },
+    // 新增：设置当前角色
+    setCurrentCharacter: (state, action: PayloadAction<Character | null>) => {
+      state.currentCharacter = action.payload;
+    },
+    // 新增：设置角色加载状态
+    setCharacterLoading: (state, action: PayloadAction<boolean>) => {
+      state.characterLoading = action.payload;
+    },
+    // 新增：设置最近明信片
+    setRecentPostcards: (state, action: PayloadAction<Postcard[]>) => {
+      state.recentPostcards = action.payload;
+    },
+    // 新增：设置明信片加载状态
+    setPostcardsLoading: (state, action: PayloadAction<boolean>) => {
+      state.postcardsLoading = action.payload;
     }
   },
 });
@@ -264,6 +291,11 @@ export const {
   setGraph,
   setAddonModules,
   setTrulienceSettings,
+  // 新增的 action
+  setCurrentCharacter,
+  setCharacterLoading,
+  setRecentPostcards,
+  setPostcardsLoading,
 } = globalSlice.actions;
 
 export {

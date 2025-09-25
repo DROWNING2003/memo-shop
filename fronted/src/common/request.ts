@@ -3,13 +3,12 @@ import { Language } from "@/types"
 import axios from "axios"
 import { AddonDef, Connection, Graph, GraphEditor, Node, ProtocolLabel } from "./graph"
 import { isEditModeOn } from "./constant"
+import { Character } from "@/types/character";
 
 interface StartRequestConfig {
   channel: string
   userId: number,
   graphName: string,
-  language: Language,
-  voiceType: "male" | "female"
 }
 
 interface GenAgoraDataConfig {
@@ -18,35 +17,53 @@ interface GenAgoraDataConfig {
 }
 
 export const apiGenAgoraData = async (config: GenAgoraDataConfig) => {
-  // the request will be rewrite at middleware.tsx to send to $AGENT_SERVER_URL
-  const url = `/api/token/generate`
-  const { userId, channel } = config
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+  const url = `${baseUrl}/api/token/generate`;
+  const { userId, channel } = config;
   const data = {
     request_id: genUUID(),
     uid: userId,
     channel_name: channel
-  }
-  let resp: any = await axios.post(url, data)
-  resp = (resp.data) || {}
-  return resp
-}
+  };
+  let resp: any = await axios.post(url, data);
+  resp = (resp.data) || {};
+  return resp;
+};
 
-export const apiStartService = async (config: StartRequestConfig): Promise<any> => {
+export const apiStartService = async (
+  config: StartRequestConfig,
+  character?: Character
+): Promise<any> => {
   // look at app/apis/route.tsx for the server-side implementation
-  const url = `/api/agents/start`
-  const { channel, userId, graphName, language, voiceType } = config
-  const data = {
+  const url = `/api/agents/start`;
+  const { channel, userId, graphName } = config;
+  const data: any = {
     request_id: genUUID(),
     channel_name: channel,
     user_uid: userId,
     graph_name: graphName,
-    language,
-    voice_type: voiceType
+    properties: {
+      tts: {
+        params: {
+          backend: "s1",
+          temperature: 0.7,
+          sample_rate: 16000,
+          top_p: 0.7,
+          // api_key: "${env:FISH_AUDIO_TTS_KEY}",
+        },
+      },
+    },
+  };
+
+  // 只有在有角色且角色有voice_id时才添加reference_id
+  if (character?.voice_id) {
+    data.properties.tts.params.reference_id = character.voice_id;
   }
-  let resp: any = await axios.post(url, data)
-  resp = (resp.data) || {}
-  return resp
-}
+
+  let resp: any = await axios.post(url, data);
+  resp = resp.data || {};
+  return resp;
+};
 
 export const apiStopService = async (channel: string) => {
   // the request will be rewrite at middleware.tsx to send to $AGENT_SERVER_URL

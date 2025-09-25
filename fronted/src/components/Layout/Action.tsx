@@ -76,8 +76,6 @@ export default function Action(props: { className?: string }) {
         channel,
         userId,
         graphName: selectedGraph.name,
-        language,
-        voiceType,
       });
       const { code, msg } = res || {};
       if (code != 0) {

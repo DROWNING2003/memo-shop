@@ -9,7 +9,6 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
     "proto": "pbjs -t json-module -w commonjs -o src/protobuf/SttMessage.js src/protobuf/SttMessage.proto"
   },
   "dependencies": {
@@ -59,8 +58,6 @@
     "@types/react-dom": "^18",
     "@types/react-redux": "^7.1.22",
     "autoprefixer": "^10.4.20",
-    "eslint": "^8",
-    "eslint-config-next": "^15.0.3",
     "postcss": "^8.4.47",
     "protobufjs-cli": "^1.1.2",
     "sass": "^1.77.5",
