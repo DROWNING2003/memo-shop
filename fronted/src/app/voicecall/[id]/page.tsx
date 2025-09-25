@@ -3,29 +3,31 @@ import { useAppSelector,apiStartService,apiPing, useAppDispatch } from '@/common
 import AuthInitializer from '@/components/authInitializer';
 import dynamic from 'next/dynamic';
 import { setAgentConnected } from "@/store/reducers/global";
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Header from "@/components/Layout/Header";
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import { setCurrentCharacter, setCharacterLoading, setRecentPostcards, setPostcardsLoading } from '@/store/reducers/global';
-import { log } from 'console';
 // import Action from '@/components/Layout/Action';
 
-let intervalId: NodeJS.Timeout | null = null;
+let intervalId: ReturnType<typeof setInterval> | null = null;
+
+// 动态组件放到组件外，避免每次渲染重新创建导致闪烁
+const DynamicRTCCard = dynamic(() => import("@/components/Dynamic/RTCCardC"), {
+  ssr: false,
+  loading: () => null,
+});
 
 function TestComponent() {
-  const DynamicRTCCard = dynamic(() => import("@/components/Dynamic/RTCCardC"), {
-    ssr: false,
-  });
-  
   const dispatch = useAppDispatch();
   const params = useParams();
-  const characterId = params?.id ? parseInt(params.id as string) : null;
+  const characterId = useMemo(() => (params?.id ? parseInt(params.id as string) : null), [params]);
   
   // 从store中获取状态
   const options = useAppSelector((state) => state.global.options);
   const agentConnected = useAppSelector((state) => state.global.agentConnected);
   const currentCharacter = useAppSelector((state) => state.global.currentCharacter);
+  const recentPostcards = useAppSelector((state) => state.global.recentPostcards);
   const { userId, channel } = options;
   
   // // 从store中获取状态
@@ -35,47 +37,73 @@ function TestComponent() {
   // const postcardsLoading = useAppSelector((state) => state.global.postcardsLoading);
 
   const [serviceStarted, setServiceStarted] = useState(false);
+  // 保持最新channel用于定时器闭包
+  const latestChannelRef = useRef(channel);
+  useEffect(() => {
+    latestChannelRef.current = channel;
+  }, [channel]);
+
   // 获取角色信息
   useEffect(() => {
+    let cancelled = false;
     const fetchCharacter = async () => {
       if (!characterId) return;
       
       try {
         dispatch(setCharacterLoading(true));
         const characterData = await apiClient.getCharacter(characterId);
-        dispatch(setCurrentCharacter(characterData));
+        if (!cancelled) {
+          dispatch(setCurrentCharacter(characterData));
+        }
       } catch (error) {
         console.error('获取角色信息失败:', error);
-        dispatch(setCurrentCharacter(null));
+        if (!cancelled) {
+          dispatch(setCurrentCharacter(null));
+        }
       } finally {
-        dispatch(setCharacterLoading(false));
+        if (!cancelled) {
+          dispatch(setCharacterLoading(false));
+        }
       }
     };
 
     fetchCharacter();
+    return () => {
+      cancelled = true;
+    };
   }, [characterId, dispatch]);
 
   // 获取最近明信片
   useEffect(() => {
+    let cancelled = false;
     const fetchRecentPostcards = async () => {
       try {
         dispatch(setPostcardsLoading(true));
         const postcardsData = await apiClient.getPostcards({
           page: 1,
-          page_size: 10,
+          page_size: 5,
           sort_by: 'created_at',
           sort_order: 'desc'
         });
-        dispatch(setRecentPostcards(postcardsData.items));
+        if (!cancelled) {
+          dispatch(setRecentPostcards(postcardsData.items));
+        }
       } catch (error) {
         console.error('获取明信片失败:', error);
-        dispatch(setRecentPostcards([]));
+        if (!cancelled) {
+          dispatch(setRecentPostcards([]));
+        }
       } finally {
-        dispatch(setPostcardsLoading(false));
+        if (!cancelled) {
+          dispatch(setPostcardsLoading(false));
+        }
       }
     };
 
     fetchRecentPostcards();
+    return () => {
+      cancelled = true;
+    };
   }, [dispatch]);
 
   // 在角色信息和明信片加载完成后启动服务（仅自动启动一次）
@@ -91,7 +119,7 @@ function TestComponent() {
             channel,
             userId,
             graphName: "voice_assistant",
-          }, currentCharacter);
+          }, currentCharacter,recentPostcards);
           console.log('语音服务启动成功:', res);
           dispatch(setAgentConnected(true));
           setServiceStarted(true);
@@ -120,7 +148,7 @@ function TestComponent() {
       stopPing();
     }
     intervalId = setInterval(() => {
-      apiPing(channel);
+      apiPing(latestChannelRef.current);
     }, 3000);
   };
 
@@ -136,14 +164,26 @@ function TestComponent() {
       // 组件卸载时清理状态
       dispatch(setCurrentCharacter(null));
       dispatch(setRecentPostcards([]));
+      stopPing();
     };
   }, [dispatch]);
+
+  const isReady = useMemo(() => Boolean(currentCharacter && agentConnected), [currentCharacter, agentConnected]);
 
   return (
     <AuthInitializer>
       <Header />
       {/* <Action /> */}
-      <DynamicRTCCard/>
+      {isReady ? (
+        <DynamicRTCCard/>
+      ) : (
+        <div className="flex items-center justify-center py-16">
+          <div className="flex flex-col items-center">
+            <div className="h-10 w-10 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
+            <div className="mt-4 text-sm text-gray-500">正在连接语音服务…</div>
+          </div>
+        </div>
+      )}
       
     </AuthInitializer>
   )

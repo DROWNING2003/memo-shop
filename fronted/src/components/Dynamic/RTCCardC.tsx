@@ -193,15 +193,20 @@ export default function RTCCardC(props: { className?: string }) {
     }
   }
 
-  // 结束通话
+  // 结束通话（优先更新UI与状态，清理并行后台进行）
   const handleEndCall = async () => {
     try {
-      await destory()
+      // 立即更新本地UI状态，提升响应速度
       setIsConnected(false)
-      await apiStopService(channel);
-      dispatch(setAgentConnected(false));
-      router.back();
-      // 这里可以添加路由跳转或其他清理逻辑
+      dispatch(setAgentConnected(false))
+      // 迅速返回上一页，避免等待网络/RTC清理
+      router.back()
+
+      // 后台并行清理：RTC销毁 + 服务停止
+      void Promise.allSettled([
+        destory(),
+        apiStopService(channel),
+      ])
     } catch (error) {
       console.error('结束通话失败:', error)
     }

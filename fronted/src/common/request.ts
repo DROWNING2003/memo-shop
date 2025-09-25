@@ -4,6 +4,7 @@ import axios from "axios"
 import { AddonDef, Connection, Graph, GraphEditor, Node, ProtocolLabel } from "./graph"
 import { isEditModeOn } from "./constant"
 import { Character } from "@/types/character";
+import { Postcard } from "@/types/api"
 
 interface StartRequestConfig {
   channel: string
@@ -17,8 +18,7 @@ interface GenAgoraDataConfig {
 }
 
 export const apiGenAgoraData = async (config: GenAgoraDataConfig) => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
-  const url = `${baseUrl}/api/token/generate`;
+  const url = `/api/token/generate`;
   const { userId, channel } = config;
   const data = {
     request_id: genUUID(),
@@ -32,8 +32,49 @@ export const apiGenAgoraData = async (config: GenAgoraDataConfig) => {
 
 export const apiStartService = async (
   config: StartRequestConfig,
-  character?: Character
+  character?: Character,
+  postcardList?: Postcard[]
 ): Promise<any> => {
+  const buildLLMPrompt = (ch?: Character, postcards?: Postcard[]): string => {
+    const characterName = ch?.name || "";
+    const characterDesc = ch?.description || "";
+    const userRoleName = ch?.user_role_name || "";
+    const userRoleDesc = ch?.user_role_desc || "";
+
+    const sections: string[] = [];
+    if (characterName) sections.push(`角色名称: ${characterName}`);
+    if (userRoleName) sections.push(`用户扮演角色: ${userRoleName}`);
+    if (characterDesc) sections.push(`角色描述: ${characterDesc}`);
+    if (userRoleDesc) sections.push(`用户扮演角色描述: ${userRoleDesc}`);
+    if (postcards && postcards.length) {
+      const latest = postcards.slice(0, 5).map((p, idx) => {
+        const createdAt = (p as any).created_at || "";
+        const who = p.type === 'user' ? '用户' : 'AI';
+        const content = (p.content || "").slice(0, 200);
+        return `${idx + 1}. [${who}] ${createdAt} ${content}`;
+      }).join("\n");
+      sections.push(`最近明信片（按时间倒序，最多5条）:\n${latest}`);
+    }
+
+    sections.push([
+      "对话规范（电话场景）：",
+      "- 风格：口语化、简短清晰、一次一句、便于打断与转述。",
+      "- 长度：尽量在20字（中文）或12词（英文）以内；必要时拆分成多句。",
+      "- 互动：重要信息先确认（时间/地点/人名/金额），必要时复述要点。",
+      "- 语气：专业、礼貌、自然，不使用网络流行语或夸张表达。",
+      "- 错误处理：若未听清或不确定，简短请对方重复，不自作推断。",
+      "- 结束：必要时给出一句话小结与下一步确认。",
+      "限制与禁止：",
+      "- 禁止使用非官方/不真实的信息，不编造事实或来源。",
+      "- 禁止长篇大论、背景说明、技术细节堆砌与自言自语。",
+      "- 禁止输出链接、表情符号、颜文字、Markdown、代码块与括号内注释。",
+      "- 禁止暴力、色情、歧视、隐私数据收集等不当内容。",
+      "输出要求：只输出可直接朗读的对话文本，无多余格式与说明。",
+    ].join("\n"));
+
+    return sections.join("\n");
+  };
+  
   // look at app/apis/route.tsx for the server-side implementation
   const url = `/api/agents/start`;
   const { channel, userId, graphName } = config;
@@ -52,6 +93,9 @@ export const apiStartService = async (
           // api_key: "${env:FISH_AUDIO_TTS_KEY}",
         },
       },
+      llm:{
+        prompt: buildLLMPrompt(character, postcardList)
+      }
     },
   };
 
@@ -59,7 +103,8 @@ export const apiStartService = async (
   if (character?.voice_id) {
     data.properties.tts.params.reference_id = character.voice_id;
   }
-
+  console.log("start service data", data);
+  
   let resp: any = await axios.post(url, data);
   resp = resp.data || {};
   return resp;
