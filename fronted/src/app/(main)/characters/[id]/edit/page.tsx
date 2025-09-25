@@ -344,8 +344,26 @@ export default function EditCharacterPage() {
           </div>
 
           {/* 音色上传 */}
-          <div className="glass-container-primary rounded-xl p-6">
-            <Label className="text-sm font-medium color-text-primary mb-4 block">角色音色</Label>
+          <div className="glass-container-primary rounded-xl p-6 space-y-4">
+            <Label className="text-sm font-medium color-text-primary block">角色音色</Label>
+            
+            {/* Voice ID 输入框 */}
+            <div className="space-y-2">
+              <Label htmlFor="voice-id" className="text-sm color-text-primary">
+                音色ID (Voice ID)
+              </Label>
+              <Input
+                id="voice-id"
+                value={voiceId}
+                onChange={(e) => setVoiceId(e.target.value)}
+                placeholder="请输入音色ID，如：alloy、echo、fable、onyx、nova、shimmer"
+                className="bg-container-secondary border-0"
+              />
+              <p className="text-xs color-text-secondary">
+                音色ID用于语音合成服务，如果不确定请留空
+              </p>
+            </div>
+
             <div className="space-y-4">
               {voiceUrl ? (
                 <div className="space-y-3">

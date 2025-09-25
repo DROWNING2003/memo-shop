@@ -178,6 +178,12 @@ func (s *CharacterService) UpdateCharacter(id uint, userID uint, req *models.Cha
 	if req.AvatarURL != "" {
 		character.AvatarURL = req.AvatarURL
 	}
+	if req.VoiceURL != "" {
+		character.VoiceURL = req.VoiceURL
+	}
+	if req.VoiceID != "" {
+		character.VoiceID = req.VoiceID
+	}
 	if req.Visibility != "" {
 		character.Visibility = req.Visibility
 	}

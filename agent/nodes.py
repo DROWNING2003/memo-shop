@@ -380,6 +380,69 @@ class MQPostcardVoiceUpdateNode(Node):
         
         return "default"
 
+class MQPostcardStatusUpdateNode(Node):
+    """
+    明信片状态更新节点 - 将明信片状态更新为'delivered'
+    """
+    
+    def __init__(self, max_retries=2, wait=3):
+        super().__init__(max_retries=max_retries, wait=wait)
+        self.db = get_db_manager()
+    
+    def prep(self, shared):
+        """准备数据：读取会话ID"""
+        postcard_data = shared.get("postcard_data")
+        
+        if not postcard_data:
+            logger.warning("明信片数据为空")
+            return None
+        
+        conversation_id = postcard_data.get("conversation_id")
+        if not conversation_id:
+            logger.warning("会话ID为空")
+            return None
+        
+        logger.info(f"准备更新明信片状态为delivered - 会话: {conversation_id}")
+        return conversation_id
+    
+    def exec(self, conversation_id):
+        """执行状态更新操作：将明信片状态改为delivered"""
+        try:
+            query = """
+            UPDATE postcards 
+            SET status = 'delivered', updated_at = NOW()
+            WHERE conversation_id = %s AND status != 'delivered'
+            """
+            
+            affected_rows = self.db.execute_update(query, (conversation_id,))
+            
+            if affected_rows > 0:
+                logger.info(f"明信片状态更新成功 - 会话: {conversation_id}")
+                return True
+            else:
+                logger.warning(f"未找到对应的明信片记录或状态已是delivered - 会话: {conversation_id}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"明信片状态更新失败: {e}")
+            raise e
+    
+    def exec_fallback(self, conversation_id, exc):
+        """处理状态更新失败的情况"""
+        logger.warning(f"明信片状态更新失败: {exc}")
+        return False
+    
+    def post(self, shared, prep_res, exec_res):
+        """后处理：更新状态保存状态"""
+        if exec_res:
+            shared["status_updated"] = True
+            logger.info("明信片状态更新成功")
+        else:
+            shared["status_updated"] = False
+            logger.warning("明信片状态更新失败")
+        
+        return "default"
+
 class MQMessageProcessorNode(Node):
     """
     消息队列消息处理节点 - 处理MQ消息并启动明信片生成流程

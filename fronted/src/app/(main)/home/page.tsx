@@ -21,7 +21,6 @@ export default function HomePage() {
       const response = await apiClient.getPostcards({
         page: 1,
         page_size: 10,
-        status: 'sent',
         sort_by: 'created_at',
         sort_order: 'desc',
         type: 'user' // 获取所有类型的明信片

@@ -211,20 +211,22 @@ export default function ConversationDetailPage() {
         </header>
 
         <div className="p-4">
-          {/* 明信片轮播 */}
+          {/* 明信片轮播 - 只显示状态为delivered的AI明信片 */}
           <Carousel className="w-full">
             <CarouselContent>
-              {conversation.map((card, index) => (
-                <CarouselItem key={card.id}>
-                  <div className="p-1 flex justify-center">
-                    <Card>
-                      <CardContent className="flex items-center justify-center p-0">
-                        <PostcardPreview postcard={card} />
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CarouselItem>
-              ))}
+              {conversation
+                .filter(card => card.type === 'user' || card.status === 'delivered')
+                .map((card, index) => (
+                  <CarouselItem key={card.id}>
+                    <div className="p-1 flex justify-center">
+                      <Card>
+                        <CardContent className="flex items-center justify-center p-0">
+                          <PostcardPreview postcard={card} />
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CarouselItem>
+                ))}
             </CarouselContent>
             <CarouselPrevious />
             <CarouselNext />

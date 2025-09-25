@@ -5,7 +5,7 @@
 """
 
 from pocketflow import Flow
-from nodes import MQMessageProcessorNode, MQPostcardGenerationNode, MQPostcardSaveNode, MQVoiceGenerationNode, MQPostcardVoiceUpdateNode
+from nodes import MQMessageProcessorNode, MQPostcardGenerationNode, MQPostcardSaveNode, MQVoiceGenerationNode, MQPostcardVoiceUpdateNode, MQPostcardStatusUpdateNode
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ def create_postcard_flow():
     3. MQPostcardSaveNode: 保存明信片到数据库
     4. MQVoiceGenerationNode: 生成语音文件
     5. MQPostcardVoiceUpdateNode: 更新明信片语音URL
+    6. MQPostcardStatusUpdateNode: 更新明信片状态为delivered
     
     返回:
         Flow: 配置好的明信片生成流程
@@ -30,13 +31,15 @@ def create_postcard_flow():
     postcard_save_node = MQPostcardSaveNode(max_retries=2, wait=3)
     voice_generation_node = MQVoiceGenerationNode(max_retries=3, wait=5)
     voice_update_node = MQPostcardVoiceUpdateNode(max_retries=2, wait=3)
+    status_update_node = MQPostcardStatusUpdateNode(max_retries=2, wait=3)
     
     # 连接节点流程
-    # 消息验证通过 -> 生成明信片 -> 保存明信片 -> 生成语音 -> 更新语音URL
+    # 消息验证通过 -> 生成明信片 -> 保存明信片 -> 生成语音 -> 更新语音URL -> 更新状态为delivered
     message_processor_node - "process_postcard" >> postcard_generation_node
     postcard_generation_node >> postcard_save_node
     postcard_save_node >> voice_generation_node
     voice_generation_node >> voice_update_node
+    voice_update_node >> status_update_node
     
     # 消息验证失败 -> 错误处理（直接结束流程）
     message_processor_node - "error" >> None
@@ -44,7 +47,7 @@ def create_postcard_flow():
     # 创建流程，从消息处理节点开始
     flow = Flow(start=message_processor_node)
     
-    logger.info("明信片生成流程（包含语音）创建完成")
+    logger.info("明信片生成流程（包含语音和状态更新）创建完成")
     return flow
 
 def process_mq_message_with_flow(mq_message):
