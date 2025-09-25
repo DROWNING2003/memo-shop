@@ -1,9 +1,20 @@
 "use client";
 
 import React from "react";
-import { ArrowLeft, MessageCircle, Star, Eye, Volume2, Play, Pause, Edit, Share } from "lucide-react";
+import { ArrowLeft, MessageCircle, Star, Eye, Volume2, Play, Pause, Edit, Share, Trash2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { AuthGuard } from "@/components/auth-guard";
 import { useRouter, useParams } from "next/navigation";
 import { apiClient } from "@/lib/api";
@@ -20,6 +31,8 @@ export default function CharacterDetailPage() {
   const [loading, setLoading] = React.useState(true);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [audioRef] = React.useState(React.createRef<HTMLAudioElement>());
+  const [isFavorite, setIsFavorite] = React.useState(false);
+  const [favoriteLoading, setFavoriteLoading] = React.useState(false);
   
   // 获取登录状态
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -31,12 +44,18 @@ export default function CharacterDetailPage() {
     return character.creator_id === user.id || character.creator?.id === user.id;
   }, [isAuthenticated, user, character]);
 
-  // 加载角色数据
+  // 加载角色数据和收藏状态
   React.useEffect(() => {
-    const loadCharacter = async () => {
+    const loadCharacterAndFavoriteStatus = async () => {
       try {
         const characterData = await apiClient.getCharacter(characterId);
         setCharacter(characterData);
+        
+        // 检查收藏状态
+        if (isAuthenticated) {
+          const favoriteStatus = await apiClient.checkCharacterFavorite(characterId);
+          setIsFavorite(favoriteStatus.is_favorite);
+        }
       } catch (error) {
         console.error('Failed to load character:', error);
       } finally {
@@ -45,9 +64,9 @@ export default function CharacterDetailPage() {
     };
 
     if (characterId) {
-      loadCharacter();
+      loadCharacterAndFavoriteStatus();
     }
-  }, [characterId]);
+  }, [characterId, isAuthenticated]);
 
   const handleBack = () => {
     router.back();
@@ -102,6 +121,57 @@ export default function CharacterDetailPage() {
     }
   };
 
+  const handleVoiceCallClick = () => {
+    router.push(`/voicecall/${characterId}`);
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!isAuthenticated) {
+      alert('请先登录后再收藏角色');
+      return;
+    }
+
+    setFavoriteLoading(true);
+    try {
+      const result = await apiClient.toggleCharacterFavorite(characterId);
+      setIsFavorite(result.is_favorite);
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      alert('操作失败，请重试');
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
+
+  const handleDeleteClick = () => {
+    if (!isOwner) {
+      alert('只有创建者可以删除角色');
+      return;
+    }
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
+    try {
+      await apiClient.deleteCharacter(characterId);
+      setDeleteDialogOpen(false);
+      router.push('/characters');
+    } catch (error) {
+      console.error('Failed to delete character:', error);
+      alert('删除失败，请重试');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+  };
+
   if (loading) {
     return (
       <AuthGuard>
@@ -151,6 +221,21 @@ export default function CharacterDetailPage() {
             <h1 className="text-page-title color-text-primary">角色详情</h1>
             
             <div className="flex items-center space-x-2">
+              {/* 收藏按钮 */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleToggleFavorite}
+                disabled={favoriteLoading}
+                className={`neumorphism ${isFavorite ? 'text-yellow-500' : ''}`}
+              >
+                {favoriteLoading ? (
+                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                ) : (
+                  <Star className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
+                )}
+              </Button>
+              
               {/* 分享按钮 */}
               <Button
                 variant="ghost"
@@ -170,6 +255,18 @@ export default function CharacterDetailPage() {
                   className="neumorphism"
                 >
                   <Edit className="w-5 h-5" />
+                </Button>
+              )}
+              
+              {/* 删除按钮 - 只显示给创建者 */}
+              {isOwner && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDeleteClick}
+                  className="neumorphism text-red-500 hover:text-red-600"
+                >
+                  <Trash2 className="w-5 h-5" />
                 </Button>
               )}
             </div>
@@ -208,15 +305,28 @@ export default function CharacterDetailPage() {
               </div>
             </div>
 
-            {/* 开始对话按钮 */}
-            <Button
-              onClick={handleChatClick}
-              className="w-full healing-gradient-green text-white"
-              size="lg"
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              开始对话
-            </Button>
+            {/* 操作按钮组 */}
+            <div className="flex space-x-3">
+              {/* 开始对话按钮 */}
+              <Button
+                onClick={handleChatClick}
+                className="flex-1 healing-gradient-green text-white"
+                size="lg"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                开始对话
+              </Button>
+              
+              {/* 电话按钮 */}
+              <Button
+                onClick={handleVoiceCallClick}
+                className="flex-1 healing-gradient-blue text-white"
+                size="lg"
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                打电话
+              </Button>
+            </div>
           </div>
 
           {/* 角色描述 */}
@@ -229,7 +339,7 @@ export default function CharacterDetailPage() {
 
           {/* 身份描述 */}
           <div className="glass-container-primary rounded-xl p-6">
-            <h3 className="text-sm font-medium color-text-primary mb-3">身份描述</h3>
+            <h3 className="text-sm font-medium color-text-primary mb-3">用户描述</h3>
             <p className="text-sm color-text-secondary leading-relaxed">
               {character.user_role_desc || "这个身份还没有详细的描述..."}
             </p>
@@ -297,6 +407,31 @@ export default function CharacterDetailPage() {
             </div>
           )}
         </div>
+
+        {/* 删除确认对话框 */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>确认删除</AlertDialogTitle>
+              <AlertDialogDescription>
+                确定要删除角色 &ldquo;{character?.name}&rdquo; 吗？此操作不可撤销，所有相关的对话记录也将被删除。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleDeleteCancel}>取消</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleting ? (
+                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2"></div>
+                ) : null}
+                删除
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AuthGuard>
   );
