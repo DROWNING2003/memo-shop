@@ -25,7 +25,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080',
+      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://momoshop-back.zeabur.app',
     });
     
     // 添加请求拦截器，自动添加认证令牌
