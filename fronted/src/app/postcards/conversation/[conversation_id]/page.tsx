@@ -93,45 +93,65 @@ export default function ConversationDetailPage() {
 
     setIsSharing(true);
     try {
-      // 获取明信片预览元素
-      const postcardElement = document.querySelector('.postcard-preview') as HTMLElement;
+      // 获取当前明信片对应的预览元素
+      // 使用data属性来精确匹配当前明信片
+      const postcardElement = document.querySelector(`[data-postcard-id="${postcard.id}"] .postcard-preview`) as HTMLElement;
       if (!postcardElement) {
-        console.error('明信片元素未找到');
-        // 使用文本分享作为备用
-        await shareText(postcard);
-        return;
-      }
-
-      // 使用html2canvas截图
-      const html2canvas = await import('html2canvas');
-      const canvas = html2canvas.default;
-      const canvasElement = await canvas(postcardElement, {
-        backgroundColor: '#ffffff',
-        scale: 2, // 提高清晰度
-        useCORS: true,
-        allowTaint: true
-      });
-
-      // 转换为blob
-      canvasElement.toBlob(async (blob: Blob | null) => {
-        if (!blob) {
-          console.error('截图失败');
+        console.error('明信片元素未找到，尝试使用第一个明信片');
+        // 备用方案：使用第一个明信片
+        const firstPostcardElement = document.querySelector('.postcard-preview') as HTMLElement;
+        if (!firstPostcardElement) {
+          console.error('明信片元素未找到');
           await shareText(postcard);
           return;
         }
-
-        // 创建分享数据
-        const file = new File([blob], '明信片.png', { type: 'image/png' });
         
-        try {
-          if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: `${postcard.user?.nickname || postcard.user?.username || '用户'} 的明信片`,
-              text: postcard.content,
-              files: [file]
-            });
-          } else {
-            // 备用方案：下载图片
+        // 使用html2canvas截图，保持正确的宽高比
+        const html2canvas = await import('html2canvas');
+        const canvas = html2canvas.default;
+        const canvasElement = await canvas(firstPostcardElement, {
+          backgroundColor: '#ffffff',
+          scale: 2, // 提高清晰度
+          useCORS: true,
+          allowTaint: true,
+          width: firstPostcardElement.scrollWidth, // 使用实际宽度
+          height: firstPostcardElement.scrollHeight, // 使用实际高度
+          windowWidth: firstPostcardElement.scrollWidth, // 窗口宽度
+          windowHeight: firstPostcardElement.scrollHeight // 窗口高度
+        });
+
+        // 转换为blob
+        canvasElement.toBlob(async (blob: Blob | null) => {
+          if (!blob) {
+            console.error('截图失败');
+            await shareText(postcard);
+            return;
+          }
+
+          // 创建分享数据
+          const file = new File([blob], '明信片.png', { type: 'image/png' });
+          
+          try {
+            if (navigator.share && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: `${postcard.user?.nickname || postcard.user?.username || '用户'} 的明信片`,
+                text: postcard.content,
+                files: [file]
+              });
+            } else {
+              // 备用方案：下载图片
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = '明信片.png';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }
+          } catch (shareError) {
+            console.error('分享失败:', shareError);
+            // 在异步回调中不能直接调用分享，改为下载图片
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -141,19 +161,65 @@ export default function ConversationDetailPage() {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
           }
-        } catch (shareError) {
-          console.error('分享失败:', shareError);
-          // 在异步回调中不能直接调用分享，改为下载图片
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = '明信片.png';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }
-      }, 'image/png');
+        }, 'image/png');
+      } else {
+        // 使用html2canvas截图，保持正确的宽高比
+        const html2canvas = await import('html2canvas');
+        const canvas = html2canvas.default;
+        const canvasElement = await canvas(postcardElement, {
+          backgroundColor: '#ffffff',
+          scale: 2, // 提高清晰度
+          useCORS: true,
+          allowTaint: true,
+          width: postcardElement.scrollWidth, // 使用实际宽度
+          height: postcardElement.scrollHeight, // 使用实际高度
+          windowWidth: postcardElement.scrollWidth, // 窗口宽度
+          windowHeight: postcardElement.scrollHeight // 窗口高度
+        });
+
+        // 转换为blob
+        canvasElement.toBlob(async (blob: Blob | null) => {
+          if (!blob) {
+            console.error('截图失败');
+            await shareText(postcard);
+            return;
+          }
+
+          // 创建分享数据
+          const file = new File([blob], '明信片.png', { type: 'image/png' });
+          
+          try {
+            if (navigator.share && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: `${postcard.user?.nickname || postcard.user?.username || '用户'} 的明信片`,
+                text: postcard.content,
+                files: [file]
+              });
+            } else {
+              // 备用方案：下载图片
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = '明信片.png';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }
+          } catch (shareError) {
+            console.error('分享失败:', shareError);
+            // 在异步回调中不能直接调用分享，改为下载图片
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '明信片.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        }, 'image/png');
+      }
     } catch (error) {
       console.error('Failed to share:', error);
       await shareText(postcard);
@@ -330,7 +396,7 @@ export default function ConversationDetailPage() {
                   .filter(card => card.type === 'user' || card.status === 'delivered')
                   .map((card, index) => (
                     <CarouselItem key={card.id}>
-                      <div className="p-1 flex justify-center">
+                      <div className="p-1 flex justify-center" data-postcard-id={card.id}>
                         <div className="postcard-preview">
                           <PostcardPreview postcard={card} />
                         </div>

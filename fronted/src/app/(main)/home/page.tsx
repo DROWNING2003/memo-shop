@@ -79,23 +79,7 @@ export default function HomePage() {
   });
 
   const groupedPostcards = groupPostcardsByDate(recentPostcards);
-
-  const getMoodIcon = (content: string) => {
-    if (content.includes('开心') || content.includes('高兴') || content.includes('快乐')) {
-      return { icon: '☀️', label: '开心', color: 'text-warning' };
-    }
-    if (content.includes('困惑') || content.includes('迷茫') || content.includes('疑问')) {
-      return { icon: '☁️', label: '困惑', color: 'text-info' };
-    }
-    if (content.includes('温暖') || content.includes('感动') || content.includes('感谢')) {
-      return { icon: '❤️', label: '温暖', color: 'text-error' };
-    }
-    if (content.includes('悲伤') || content.includes('难过') || content.includes('失落')) {
-      return { icon: '🌧️', label: '悲伤', color: 'text-info' };
-    }
-    return { icon: '✨', label: '日常', color: 'text-primary' };
-  };
-
+  
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -182,7 +166,6 @@ export default function HomePage() {
                   {/* 明信片列表 */}
                   <div className="space-y-3">
                     {group.postcards.map((postcard, index) => {
-                      const mood = getMoodIcon(postcard.content);
                       const time = new Date(postcard.created_at).toLocaleTimeString('zh-CN', {
                         hour: '2-digit',
                         minute: '2-digit'
@@ -227,10 +210,6 @@ export default function HomePage() {
                               <p className="mb-2 text-sm text-muted-foreground line-clamp-2">
                                 {postcard.content}
                               </p>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm">{mood.icon}</span>
-                                <span className="text-xs text-muted-foreground">{mood.label}</span>
-                              </div>
                             </div>
                           </div>
                         </div>

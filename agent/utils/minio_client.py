@@ -64,7 +64,14 @@ class MinioClient:
                 content_type=content_type
             )
             
-            file_url = f"http://{os.getenv('MINIO_ENDPOINT', 'localhost:9000')}/{self.bucket_name}/{object_name}"
+            # 使用公共基础URL生成文件访问URL
+            public_base_url = os.getenv('MINIO_PUBLIC_BASE_URL')
+            if public_base_url:
+                file_url = f"{public_base_url}/{self.bucket_name}/{object_name}"
+            else:
+                # 如果没有配置公共URL，使用内部地址
+                file_url = f"http://{os.getenv('MINIO_ENDPOINT', 'localhost:9000')}/{self.bucket_name}/{object_name}"
+            
             logger.info(f"✅ 文件上传成功: {object_name}")
             return file_url
             

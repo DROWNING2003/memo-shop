@@ -92,127 +92,121 @@ export default function PostcardsPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-        {/* 顶部导航 */}
-        <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/50">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Mail className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">明信片广场</h1>
-                <p className="text-sm text-muted-foreground">分享温暖，传递心意</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <ThemeToggle />
-              <Button
-                onClick={handleCreatePostcard}
-                size="icon"
-                className="h-9 w-9 rounded-full"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <div className="p-4">
-          {/* 搜索和筛选 */}
-          <div className="mb-6 space-y-4">
-            {/* 搜索框 */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="搜索明信片内容或角色名称..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10"
-              />
-            </div>
-
-            {/* 筛选标签 */}
-            <div className="flex space-x-2">
-              <Button
-                variant={filterType === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterType("all")}
-                className="h-8 px-3 text-xs"
-              >
-                全部
-              </Button>
-              <Button
-                variant={filterType === "public" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterType("public")}
-                className="h-8 px-3 text-xs"
-              >
-                公开明信片
-              </Button>
-              <Button
-                variant={filterType === "my" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterType("my")}
-                className="h-8 px-3 text-xs"
-              >
-                我的明信片
-              </Button>
-            </div>
-          </div>
-
-          {/* 明信片内容 */}
-          {loading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="rounded-2xl p-4 bg-background/50 border border-border/30 animate-pulse">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-muted"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex justify-between">
-                        <div className="h-4 bg-muted rounded w-1/4"></div>
-                        <div className="h-3 bg-muted rounded w-1/6"></div>
-                      </div>
-                      <div className="h-12 bg-muted rounded"></div>
-                    </div>
-                  </div>
+      <div className="h-screen flex flex-col bg-gradient-to-br from-background to-muted/20">
+        {/* 固定顶部区域 */}
+        <div className="flex-none">
+          {/* 顶部导航 */}
+          <header className="backdrop-blur-md bg-background/80 border-b border-border/50">
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="w-4 h-4 text-primary" />
                 </div>
-              ))}
-            </div>
-          ) : groupedPostcards.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                  <Mail className="w-8 h-8 text-muted-foreground" />
+                <div>
+                  <h1 className="text-lg font-semibold text-foreground">明信片广场</h1>
+                  <p className="text-sm text-muted-foreground">分享温暖，传递心意</p>
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">暂无明信片</h3>
-                <p className="text-sm text-muted-foreground mb-4">还没有明信片，快去创建吧！</p>
-                <Button 
+              </div>
+              <div className="flex items-center space-x-2">
+                <ThemeToggle />
+                <Button
                   onClick={handleCreatePostcard}
-                  className="h-9 px-4"
+                  size="icon"
+                  className="h-9 w-9 rounded-full"
                 >
-                  创建明信片
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          ) : (
-            <div className="space-y-8">
-              {groupedPostcards.map((group, groupIndex) => (
-                <div key={groupIndex} className="space-y-4">
-                  {/* 明信片轮播 */}
+          </header>
+
+          {/* 搜索和筛选 */}
+          <div className="backdrop-blur-md bg-background/80 border-b border-border/50 p-4">
+            <div className="w-full max-w-md mx-auto">
+              <div className="space-y-4">
+                {/* 搜索框 */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="搜索明信片内容或角色名称..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-10"
+                  />
+                </div>
+
+                {/* 筛选标签 */}
+                <div className="flex space-x-2">
+                  <Button
+                    variant={filterType === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilterType("all")}
+                    className="h-8 px-3 text-xs"
+                  >
+                    全部
+                  </Button>
+                  <Button
+                    variant={filterType === "public" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilterType("public")}
+                    className="h-8 px-3 text-xs"
+                  >
+                    公开明信片
+                  </Button>
+                  <Button
+                    variant={filterType === "my" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilterType("my")}
+                    className="h-8 px-3 text-xs"
+                  >
+                    我的明信片
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 可滚动明信片区域 */}
+        <div className="flex-1 min-h-0">
+          <div className="h-full overflow-y-auto">
+            <div className="flex items-center justify-center p-4 min-h-full">
+              <div className="w-full max-w-md">
+                {/* 明信片轮播 */}
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-center">
+                      <div className="w-8 h-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-4"></div>
+                      <p className="text-sm text-muted-foreground">加载中...</p>
+                    </div>
+                  </div>
+                ) : postcards.length === 0 ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                        <Mail className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-medium text-foreground mb-2">暂无明信片</h3>
+                      <p className="text-sm text-muted-foreground mb-4">还没有明信片，快去创建吧！</p>
+                      <Button 
+                        onClick={handleCreatePostcard}
+                        className="h-9 px-4"
+                      >
+                        创建明信片
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
                   <Carousel className="w-full">
                     <CarouselContent>
-                      {group.postcards.map((postcard, index) => (
+                      {postcards.map((postcard, index) => (
                         <CarouselItem key={postcard.id}>
-                          <div className="p-1 flex justify-center">
+                          <div className="p-1 flex justify-center" data-postcard-id={postcard.id}>
                             <div 
-                              className="cursor-pointer transform hover:scale-105 transition-transform duration-300"
+                              className="cursor-pointer"
                               onClick={() => handlePostcardClick(postcard)}
                             >
-                              <PostcardPreview 
-                                postcard={postcard} 
-                                className="w-full"
-                              />
+                              <PostcardPreview postcard={postcard} />
                             </div>
                           </div>
                         </CarouselItem>
@@ -221,15 +215,10 @@ export default function PostcardsPage() {
                     <CarouselPrevious />
                     <CarouselNext />
                   </Carousel>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* 底部导航 */}
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-          <BottomNavigation />
+          </div>
         </div>
       </div>
     </AuthGuard>

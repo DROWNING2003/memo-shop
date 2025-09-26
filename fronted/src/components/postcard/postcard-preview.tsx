@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Share2, Play, Pause, Download, X, Palette } from "lucide-react";
+import { Share2, Play, Pause, Download, X, Palette, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Postcard } from "@/types/api";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,7 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [selectedGradient, setSelectedGradient] = React.useState("none");
   const [showGradientPicker, setShowGradientPicker] = React.useState(false);
+  const [showImageZoom, setShowImageZoom] = React.useState(false);
   
   // 格式化日期
   const formatDate = (dateString: string) => {
@@ -119,8 +120,21 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
 
   // 生成截图
   const generateScreenshot = async () => {
-    // 获取当前明信片元素
-    const postcardElement = document.querySelector('.postcard-preview') as HTMLElement;
+    // 获取当前明信片元素 - 使用更精确的选择器
+    // 首先尝试找到包含当前明信片ID的容器
+    const postcardContainer = document.querySelector(`[data-postcard-id="${postcard.id}"]`) as HTMLElement;
+    let postcardElement: HTMLElement | null = null;
+    
+    if (postcardContainer) {
+      // 如果找到了包含data-postcard-id的容器，从中查找明信片元素
+      postcardElement = postcardContainer.querySelector('.postcard-preview') as HTMLElement;
+    }
+    
+    // 如果没找到，尝试直接查找当前明信片
+    if (!postcardElement) {
+      postcardElement = document.querySelector('.postcard-preview') as HTMLElement;
+    }
+    
     if (!postcardElement) {
       console.error('明信片元素未找到');
       return;
@@ -166,15 +180,23 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
       screenshotContainer.style.background = 'transparent';
     }
     
+    // 确保明信片保持正确的宽高比
+    postcardClone.style.width = '375px'; // 固定宽度
+    postcardClone.style.height = 'auto'; // 高度自适应
+    postcardClone.style.minWidth = '375px'; // 最小宽度
+    postcardClone.style.maxWidth = '375px'; // 最大宽度
+    
     screenshotContainer.appendChild(postcardClone);
     
     // 添加到DOM进行截图（隐藏状态）
     screenshotContainer.style.position = 'fixed';
     screenshotContainer.style.left = '-9999px';
     screenshotContainer.style.top = '-9999px';
+    screenshotContainer.style.width = 'fit-content'; // 自适应宽度
+    screenshotContainer.style.height = 'auto'; // 自适应高度
     document.body.appendChild(screenshotContainer);
 
-    // 使用html2canvas截图
+    // 使用html2canvas截图，保持正确的宽高比
     const html2canvas = await import('html2canvas');
     const canvas = html2canvas.default;
     const canvasElement = await canvas(screenshotContainer, {
@@ -182,7 +204,11 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
       scale: 2,
       useCORS: true,
       allowTaint: true,
-      logging: false
+      logging: false,
+      width: screenshotContainer.scrollWidth, // 使用实际宽度
+      height: screenshotContainer.scrollHeight, // 使用实际高度
+      windowWidth: screenshotContainer.scrollWidth, // 窗口宽度
+      windowHeight: screenshotContainer.scrollHeight // 窗口高度
     });
 
     // 清理DOM
@@ -330,14 +356,15 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
 
   return (
     <>
-      <div className={cn("min-w-[375px] max-w-full p-4 postcard-preview", className)}>
+      <div className={cn("postcard-preview", className)}>
         <div className="min-h-[281px] bg-white rounded-lg overflow-hidden transform transition-transform duration-300 flex flex-col self-center">
           {/* 明信片图片 */}
           <div className="flex-1 relative">
             <img 
               src={getImageUrl()}
-              className="w-full h-[255px] object-cover" 
+              className="w-full h-[255px] object-cover cursor-pointer hover:opacity-90 transition-opacity" 
               alt="明信片预览"
+              onClick={() => setShowImageZoom(true)}
               onError={(e) => {
                 // 图片加载失败时使用默认图片
                 e.currentTarget.src = "https://ai-public.mastergo.com/ai/img_res/1889d19af96c73c30914b226e9d00999.jpg";
@@ -485,6 +512,29 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
                 </Button>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 图片放大弹窗 */}
+      <Dialog open={showImageZoom} onOpenChange={setShowImageZoom}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 border-0 bg-transparent shadow-none">
+          <div className="relative">
+            <img 
+              src={getImageUrl()}
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              alt="明信片大图"
+              onError={(e) => {
+                e.currentTarget.src = "https://ai-public.mastergo.com/ai/img_res/1889d19af96c73c30914b226e9d00999.jpg";
+              }}
+            />
+            {/* 关闭按钮 */}
+            <button 
+              onClick={() => setShowImageZoom(false)}
+              className="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </DialogContent>
       </Dialog>

@@ -21,7 +21,7 @@ type Character struct {
 
 	// 用户角色设定
 	UserRoleName string `json:"user_role_name" gorm:"size:50;not null"`
-	UserRoleDesc string `json:"user_role_desc" gorm:"size:200;not null"`
+	UserRoleDesc string `json:"user_role_desc" gorm:"size:400;not null"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
@@ -57,7 +57,7 @@ type CharacterCreateRequest struct {
 	VoiceID      string `json:"voice_id" binding:"max=100"` // 音色ID字段，用于AI生成声音
 	Visibility   string `json:"visibility" binding:"oneof=private public"`
 	UserRoleName string `json:"user_role_name" binding:"required,max=50"`
-	UserRoleDesc string `json:"user_role_desc" binding:"required,max=200"`
+	UserRoleDesc string `json:"user_role_desc" binding:"required,max=400"`
 }
 
 type CharacterUpdateRequest struct {
@@ -69,7 +69,7 @@ type CharacterUpdateRequest struct {
 	Visibility   string `json:"visibility" binding:"oneof=private public"`
 	IsActive     *bool  `json:"is_active"`
 	UserRoleName string `json:"user_role_name" binding:"max=50"`
-	UserRoleDesc string `json:"user_role_desc" binding:"max=200"`
+	UserRoleDesc string `json:"user_role_desc" binding:"max=400"`
 }
 
 type CharacterListQuery struct {
