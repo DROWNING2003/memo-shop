@@ -114,7 +114,7 @@ export default function PostcardDetailPage() {
   if (loading) {
     return (
       <AuthGuard>
-        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        <div className="min-h-screen bg-page">
           <div className="p-4">
             <Button
               variant="ghost"

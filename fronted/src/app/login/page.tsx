@@ -97,7 +97,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-[375px] h-[762px] mx-auto bg-gradient-to-br from-background via-secondary/20 to-accent/10 dark:from-background dark:via-secondary/10 dark:to-accent/5 relative flex flex-col items-center px-6">
+    <div className="w-full max-w-sm mx-auto min-h-screen bg-page relative flex flex-col items-center px-6">
       {/* Logo和标题 */}
       <div className="mt-16 mb-8 text-center">
         <div className="font-['Pacifico'] text-4xl text-primary mb-2">回忆小卖部</div>

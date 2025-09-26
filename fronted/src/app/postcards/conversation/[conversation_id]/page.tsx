@@ -12,6 +12,7 @@ import {
   Calendar,
   User,
   Sparkles,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,8 @@ export default function ConversationDetailPage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isLiking, setIsLiking] = React.useState(false);
+  const [currentPostcardIndex, setCurrentPostcardIndex] = React.useState(0);
+  const [isSharing, setIsSharing] = React.useState(false);
 
   React.useEffect(() => {
     if (conversation_id) {
@@ -83,20 +86,112 @@ export default function ConversationDetailPage() {
   };
 
   const handleShare = async (postcard: Postcard) => {
+    if (isSharing) {
+      console.log('分享正在进行中，请稍候...');
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      // 获取明信片预览元素
+      const postcardElement = document.querySelector('.postcard-preview') as HTMLElement;
+      if (!postcardElement) {
+        console.error('明信片元素未找到');
+        // 使用文本分享作为备用
+        await shareText(postcard);
+        return;
+      }
+
+      // 使用html2canvas截图
+      const html2canvas = await import('html2canvas');
+      const canvas = html2canvas.default;
+      const canvasElement = await canvas(postcardElement, {
+        backgroundColor: '#ffffff',
+        scale: 2, // 提高清晰度
+        useCORS: true,
+        allowTaint: true
+      });
+
+      // 转换为blob
+      canvasElement.toBlob(async (blob: Blob | null) => {
+        if (!blob) {
+          console.error('截图失败');
+          await shareText(postcard);
+          return;
+        }
+
+        // 创建分享数据
+        const file = new File([blob], '明信片.png', { type: 'image/png' });
+        
+        try {
+          if (navigator.share && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: `${postcard.user?.nickname || postcard.user?.username || '用户'} 的明信片`,
+              text: postcard.content,
+              files: [file]
+            });
+          } else {
+            // 备用方案：下载图片
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '明信片.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        } catch (shareError) {
+          console.error('分享失败:', shareError);
+          // 在异步回调中不能直接调用分享，改为下载图片
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = '明信片.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/png');
+    } catch (error) {
+      console.error('Failed to share:', error);
+      await shareText(postcard);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const shareText = async (postcard: Postcard) => {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${postcard.user?.nickname || postcard.user?.username} 的明信片`,
+          title: `${postcard.user?.nickname || postcard.user?.username || '用户'} 的明信片`,
           text: postcard.content,
           url: window.location.href,
         });
       } else {
-        // 备用方案：复制链接到剪贴板
         await navigator.clipboard.writeText(window.location.href);
         alert('链接已复制到剪贴板');
       }
     } catch (error) {
-      console.error('Failed to share:', error);
+      console.error('文本分享失败:', error);
+      // 如果分享被取消，不显示错误提示
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('用户取消了分享');
+        return;
+      }
+      // 如果是权限问题，尝试复制到剪贴板
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          alert('链接已复制到剪贴板');
+        } catch (clipboardError) {
+          alert('分享失败，请稍后重试');
+        }
+      } else {
+        alert('分享失败，请稍后重试');
+      }
     }
   };
 
@@ -115,7 +210,7 @@ export default function ConversationDetailPage() {
   if (loading) {
     return (
       <AuthGuard>
-        <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        <div className="min-h-screen bg-page">
           <div className="p-4">
             <Button
               variant="ghost"
@@ -206,31 +301,47 @@ export default function ConversationDetailPage() {
               明信片
             </h1>
 
-            <div className="w-10"></div> {/* 占位保持对称 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                const filteredPostcards = conversation.filter(card => card.type === 'user' || card.status === 'delivered');
+                if (filteredPostcards.length > 0) {
+                  const currentPostcard = filteredPostcards[currentPostcardIndex] || filteredPostcards[0];
+                  handleShare(currentPostcard);
+                }
+              }}
+              disabled={isSharing}
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
           </div>
         </header>
 
-        <div className="p-4">
-          {/* 明信片轮播 - 只显示状态为delivered的AI明信片 */}
-          <Carousel className="w-full">
-            <CarouselContent>
-              {conversation
-                .filter(card => card.type === 'user' || card.status === 'delivered')
-                .map((card, index) => (
-                  <CarouselItem key={card.id}>
-                    <div className="p-1 flex justify-center">
-                      <Card>
-                        <CardContent className="flex items-center justify-center p-0">
+        {/* 明信片内容 - 上下居中 */}
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
+          <div className="w-full max-w-md">
+            {/* 明信片轮播 - 只显示状态为delivered的AI明信片 */}
+            <Carousel 
+              className="w-full"
+            >
+              <CarouselContent>
+                {conversation
+                  .filter(card => card.type === 'user' || card.status === 'delivered')
+                  .map((card, index) => (
+                    <CarouselItem key={card.id}>
+                      <div className="p-1 flex justify-center">
+                        <div className="postcard-preview">
                           <PostcardPreview postcard={card} />
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </CarouselItem>
-                ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
         </div>
       </div>
     </AuthGuard>

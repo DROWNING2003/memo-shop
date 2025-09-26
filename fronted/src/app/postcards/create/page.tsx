@@ -159,7 +159,7 @@ export default function CreatePostcardPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      <div className="min-h-screen bg-page">
         {/* 顶部导航 */}
         <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/50">
           <div className="flex items-center justify-between p-4">

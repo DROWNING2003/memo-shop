@@ -19,15 +19,15 @@ body {
   overflow-x: hidden;
 }
 
-/* 浅色模式背景 - 治愈渐变 */
+/* 浅色模式背景 - 清新薄荷渐变 */
 html:not(.dark) body {
-  background: linear-gradient(135deg, #E8F5E8 0%, #F0F8FF 50%, #E6F3FF 100%);
+  background: linear-gradient(135deg, #E0F2F1 0%, #E8F5E8 50%, #F0FDF4 100%);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
-/* 深色模式背景 */
+/* 深色模式背景 - 深薄荷色调 */
 html.dark body {
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  background: linear-gradient(135deg, #0F1419 0%, #1A2332 50%, #1E293B 100%);
 }
 
 a {
@@ -162,23 +162,24 @@ a {
 @layer components {
   /* 玻璃拟态容器 */
   .glass-container-primary {
-    background: var(--glass-primary);
+    background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: var(--shadow-medium);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 16px rgba(127, 176, 105, 0.15), 0 2px 6px rgba(127, 176, 105, 0.1);
   }
   
   .glass-container-secondary {
-    background: var(--glass-secondary);
+    background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(127, 176, 105, 0.1);
   }
   
   .glass-container-elevated {
-    background: var(--glass-elevated);
+    background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: var(--shadow-strong);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(127, 176, 105, 0.2), 0 4px 12px rgba(127, 176, 105, 0.15);
   }
   
   .glass-container-warm {
@@ -188,10 +189,10 @@ a {
   }
   
   .glass-card {
-    background: var(--glass-card);
+    background: rgba(255, 255, 255, 0.35);
     backdrop-filter: blur(32px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    box-shadow: var(--shadow-medium);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 16px rgba(127, 176, 105, 0.12), 0 2px 6px rgba(127, 176, 105, 0.08);
   }
   
   /* 文字颜色类 */

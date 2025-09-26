@@ -118,12 +118,12 @@ module.exports = {
     require("tailwindcss-animate"),
     function({ addUtilities }) {
       const newUtilities = {
-        // 背景渐变
+        // 背景渐变 - 清新薄荷色调
         '.bg-page': {
-          background: 'linear-gradient(135deg, #E8F5E8 0%, #F0F8FF 50%, #E6F3FF 100%)',
+          background: 'linear-gradient(135deg, #E0F2F1 0%, #E8F5E8 50%, #F0FDF4 100%)',
         },
         '.dark .bg-page': {
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+          background: 'linear-gradient(135deg, #0F1419 0%, #1A2332 50%, #1E293B 100%)',
         },
         // 玻璃拟态容器
         '.bg-container-primary': {

@@ -3,13 +3,14 @@
 import React from "react";
 import { CharacterCard } from "./character-card";
 import { apiClient } from "@/lib/api";
+import { useInfiniteScroll } from "@/common/hooks/useInfiniteScroll";
 import type { Character, CharacterListParams } from "@/types/api";
 import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CharacterGridProps {
   searchQuery: string;
-  filterType: "all" | "public" | "my";
+  filterType: "all" | "public" | "my" | "favorites";
 }
 
 export function CharacterGrid({ searchQuery, filterType }: CharacterGridProps) {
@@ -43,6 +44,11 @@ export function CharacterGrid({ searchQuery, filterType }: CharacterGridProps) {
       let response;
       if (filterType === "my") {
         response = await apiClient.getMyCharacters({ 
+          page: pageNum, 
+          page_size: 20 
+        });
+      } else if (filterType === "favorites") {
+        response = await apiClient.getFavoriteCharacters({ 
           page: pageNum, 
           page_size: 20 
         });
@@ -81,6 +87,14 @@ export function CharacterGrid({ searchQuery, filterType }: CharacterGridProps) {
       loadCharacters(page + 1);
     }
   };
+
+  // 无限滚动
+  const { loadMoreRef } = useInfiniteScroll({
+    hasMore,
+    loading,
+    onLoadMore: handleLoadMore,
+    threshold: 200
+  });
 
   const filteredCharacters = React.useMemo(() => {
     if (!searchQuery.trim()) return characters;
@@ -138,7 +152,8 @@ export function CharacterGrid({ searchQuery, filterType }: CharacterGridProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium text-foreground">
-          {filterType === "my" ? "我的角色" : "角色列表"} ({filteredCharacters.length})
+          {filterType === "my" ? "我的角色" : 
+           filterType === "favorites" ? "我的收藏" : "角色列表"} ({filteredCharacters.length})
         </h2>
         <Button
           onClick={handleRefresh}
@@ -162,9 +177,13 @@ export function CharacterGrid({ searchQuery, filterType }: CharacterGridProps) {
         ))}
       </div>
 
-      {/* 加载更多 */}
+      {/* 加载更多 - 支持无限滚动和手动加载 */}
       {hasMore && !searchQuery && (
         <div className="text-center py-4">
+          {/* 无限滚动触发器 */}
+          <div ref={loadMoreRef} className="h-4" />
+          
+          {/* 手动加载按钮 */}
           <Button
             onClick={handleLoadMore}
             variant="outline"

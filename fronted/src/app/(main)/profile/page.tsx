@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
-import { Settings, Heart, User, Edit, LogOut, ChevronRight, Shield, Bell, Moon, Trash2 } from "lucide-react";
+import { Settings, Heart, User, Edit, LogOut, ChevronRight, Shield, Bell, Moon, Trash2, Loader2, RefreshCw, Mail, Users, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,15 +12,44 @@ import { AuthGuard } from "@/components/auth-guard";
 import { apiClient } from "@/lib/api";
 import type { User as UserType } from "@/types/api";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+interface UserStats {
+  charactersCount: number;
+  postcardsCount: number;
+  favoritesCount: number;
+}
 
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = React.useState<UserType | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [stats, setStats] = React.useState<UserStats>({
+    charactersCount: 0,
+    postcardsCount: 0,
+    favoritesCount: 0
+  });
+  const [statsLoading, setStatsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    loadUserProfile();
+    loadUserData();
   }, []);
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        loadUserProfile(),
+        loadUserStats()
+      ]);
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+      toast.error("加载用户数据失败");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadUserProfile = async () => {
     try {
@@ -26,30 +57,94 @@ export default function ProfilePage() {
       setUser(userData);
     } catch (error) {
       console.error('Failed to load user profile:', error);
+      throw error;
+    }
+  };
+
+  const loadUserStats = async () => {
+    try {
+      setStatsLoading(true);
+      const [charactersResponse, postcardsResponse, favoritesResponse] = await Promise.all([
+        apiClient.getMyCharacters({ page: 1, page_size: 1 }),
+        apiClient.getPostcards({ page: 1, page_size: 1 }),
+        apiClient.getFavoriteCharacters({ page: 1, page_size: 1 })
+      ]);
+
+      setStats({
+        charactersCount: charactersResponse.total,
+        postcardsCount: postcardsResponse.total,
+        favoritesCount: favoritesResponse.total
+      });
+    } catch (error) {
+      console.error('Failed to load user stats:', error);
+      // 如果获取统计数据失败，使用默认值
+      setStats({
+        charactersCount: 0,
+        postcardsCount: 0,
+        favoritesCount: 0
+      });
     } finally {
-      setLoading(false);
+      setStatsLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await loadUserData();
+      toast.success("数据已刷新");
+    } catch (error) {
+      toast.error("刷新失败");
+    } finally {
+      setRefreshing(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_info');
+    apiClient.removeAuthToken();
     router.push('/login');
   };
 
-  // 统计数据（模拟数据）
-  const stats = [
-    { label: "我的角色", value: "12" },
-    { label: "明信片", value: "45" },
-    { label: "收藏", value: "89" }
-  ];
-
   const menuItems = [
-    { icon: User, label: "我的角色", href: "/profile/characters" },
-    { icon: Heart, label: "我的收藏", href: "/profile/favorites" },
-    { icon: Shield, label: "账号安全", href: "/profile/security" },
-    { icon: Bell, label: "通知设置", href: "/profile/notifications" },
-    { icon: Trash2, label: "清除缓存", href: "/profile/clear-cache" }
+    { 
+      icon: Edit, 
+      label: "编辑资料", 
+      href: "/profile/edit",
+      description: "修改个人信息和头像"
+    },
+    { 
+      icon: User, 
+      label: "我的角色", 
+      href: "/profile/characters", 
+      count: stats.charactersCount,
+      description: "管理你的AI角色"
+    },
+    { 
+      icon: Heart, 
+      label: "我的收藏", 
+      href: "/profile/favorites", 
+      count: stats.favoritesCount,
+      description: "收藏的角色"
+    },
+    { 
+      icon: Mail, 
+      label: "我的明信片", 
+      href: "/profile/postcards", 
+      count: stats.postcardsCount,
+      description: "管理你的明信片"
+    },
+    { 
+      icon: Shield, 
+      label: "账号安全", 
+      href: "/profile/security",
+      description: "密码和隐私设置"
+    },
+    { 
+      icon: Bell, 
+      label: "通知设置", 
+      href: "/profile/notifications",
+      description: "消息和提醒"
+    }
   ];
 
   if (loading) {
@@ -57,7 +152,7 @@ export default function ProfilePage() {
       <AuthGuard>
         <div className="min-h-screen flex items-center justify-center bg-page">
           <div className="text-center">
-            <div className="w-8 h-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-4"></div>
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
             <p className="text-muted-foreground">加载中...</p>
           </div>
         </div>
@@ -67,88 +162,133 @@ export default function ProfilePage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-page font-base pb-20">
+      <div className="w-full max-w-sm mx-auto min-h-screen bg-page relative flex flex-col px-6">
         {/* 顶部导航栏 */}
-        <nav className="fixed top-0 w-full z-50 glass-container-primary px-4 py-3">
+        <nav className="w-full glass-container-primary rounded-xl p-4 mt-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="w-8"></div>
             <h1 className="text-lg font-semibold color-text-primary">个人中心</h1>
-            <button className="w-8 h-8 flex items-center justify-center">
-              <Settings className="w-5 h-5 color-text-primary" />
-            </button>
+            <Button
+              onClick={handleRefresh}
+              variant="ghost"
+              size="icon"
+              disabled={refreshing}
+              className="w-8 h-8 rounded-lg"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
         </nav>
 
-        <main className="pt-[60px] pb-[80px] px-6">
+        <main className="flex-1 space-y-4 overflow-y-auto pb-4">
           {/* 用户信息卡片 */}
-          <div className="glass-container-primary rounded-xl p-4 mt-4 mb-4">
-            <div className="flex items-center">
-              <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden">
-                <Avatar className="w-full h-full">
-                  <AvatarImage src={user?.avatar_url || "https://ai-public.mastergo.com/ai/img_res/1051cdfdd43bc5d96a0f5ad137f4ff0b.jpg"} />
+          <div className="glass-container-primary rounded-xl p-4">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Avatar className="w-16 h-16">
+                  <AvatarImage src={user?.avatar_url} />
                   <AvatarFallback>
                     <User className="w-8 h-8" />
                   </AvatarFallback>
                 </Avatar>
+                <Badge className="absolute -bottom-1 -right-1 bg-green-500 text-xs rounded-full">
+                  在线
+                </Badge>
               </div>
-              <div className="ml-4 flex-1">
-                <h2 className="text-base font-medium color-text-primary">
-                  {user?.nickname || user?.username || "陈梦琪"}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-semibold color-text-primary truncate">
+                  {user?.nickname || user?.username || "用户"}
                 </h2>
-                <p className="text-sm color-text-secondary mt-1">
+                <p className="text-sm color-text-secondary mt-1 line-clamp-2">
                   {user?.signature || "热爱生活，享受当下的每一刻✨"}
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 px-4 py-1 border border-primary text-primary rounded-md text-sm"
-                  onClick={() => router.push('/profile/edit')}
-                >
-                  编辑资料
-                </Button>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs bg-background/50 backdrop-blur-sm">
+                    {user?.email}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs bg-background/50 backdrop-blur-sm">
+                    {new Date(user?.created_at || '').toLocaleDateString('zh-CN')} 加入
+                  </Badge>
+                </div>
               </div>
             </div>
-            {JSON.stringify(user)}
           </div>
 
-          
           {/* 统计数据 */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            {stats.map((stat, index) => (
-              <div key={index} className="glass-container-primary rounded-lg p-4 text-center">
-                <div className="text-xl font-medium text-primary">{stat.value}</div>
-                <div className="text-sm color-text-secondary mt-1">{stat.label}</div>
+          <div className="glass-container-primary rounded-xl p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold color-text-primary">数据统计</h3>
+              {statsLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {statsLoading ? "..." : stats.charactersCount}
+                </div>
+                <div className="text-sm color-text-secondary">我的角色</div>
               </div>
-            ))}
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {statsLoading ? "..." : stats.postcardsCount}
+                </div>
+                <div className="text-sm color-text-secondary">明信片</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {statsLoading ? "..." : stats.favoritesCount}
+                </div>
+                <div className="text-sm color-text-secondary">收藏</div>
+              </div>
+            </div>
           </div>
 
           {/* 功能菜单 */}
-          <div className="glass-container-primary rounded-xl mb-6">
-            {menuItems.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <React.Fragment key={item.href}>
+          <div className="glass-container-primary rounded-xl p-4">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold color-text-primary">功能菜单</h3>
+              <p className="text-sm color-text-secondary">管理你的账户和内容</p>
+            </div>
+            <div className="space-y-2">
+              {menuItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
                   <button
+                    key={item.href}
                     onClick={() => router.push(item.href)}
-                    className="w-full p-4 flex items-center space-x-4"
+                    className="w-full p-3 rounded-lg flex items-center space-x-3 hover:bg-background/50 transition-colors"
                   >
-                    <Icon className="w-5 h-5 color-text-primary" />
-                    <span className="color-text-primary flex-1 text-left">{item.label}</span>
-                    <ChevronRight className="w-4 h-4 color-text-tertiary ml-auto" />
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium color-text-primary">{item.label}</span>
+                        {item.count !== undefined && (
+                          <Badge variant="secondary" className="text-xs bg-background/50 backdrop-blur-sm">
+                            {item.count}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm color-text-secondary">{item.description}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 color-text-tertiary" />
                   </button>
-                  {index < menuItems.length - 1 && (
-                    <div className="h-[1px] bg-border/50"></div>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
-          {/* 深色模式切换 */}
-          <div className="glass-container-primary rounded-xl mb-6">
-            <div className="p-4 flex items-center space-x-4">
-              <Moon className="w-5 h-5 color-text-primary" />
-              <span className="color-text-primary flex-1">深色模式</span>
+          {/* 设置选项 */}
+          <div className="glass-container-primary rounded-xl p-4">
+            <h3 className="text-lg font-semibold color-text-primary mb-4">设置</h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Moon className="w-5 h-5 color-text-primary" />
+                <div>
+                  <div className="font-medium color-text-primary">深色模式</div>
+                  <div className="text-sm color-text-secondary">切换主题外观</div>
+                </div>
+              </div>
               <ThemeToggle />
             </div>
           </div>
@@ -157,7 +297,7 @@ export default function ProfilePage() {
           <Button
             onClick={handleLogout}
             variant="outline"
-            className="w-full glass-container-primary text-destructive hover:text-destructive"
+            className="w-full h-11 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg"
           >
             <LogOut className="w-4 h-4 mr-2" />
             退出登录
@@ -165,7 +305,9 @@ export default function ProfilePage() {
         </main>
 
         {/* 底部导航 */}
-        <BottomNavigation />
+        <div className="mt-4">
+          <BottomNavigation />
+        </div>
       </div>
     </AuthGuard>
   );
