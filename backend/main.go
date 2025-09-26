@@ -72,13 +72,14 @@ func main() {
 	// 创建 Gin 实例
 	r := gin.Default()
 
-	// 配置 CORS
+	// 配置 CORS - 允许所有域名访问
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type", "X-Total-Count"},
 		AllowCredentials: true,
+		MaxAge:           12 * 60 * 60, // 12小时
 	}))
 
 	// 添加中间件

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"memory-postcard-backend/config"
@@ -24,7 +25,7 @@ func NewUploadService(minio *minio.Client, cfg *config.Config) *UploadService {
 	}
 }
 
-// UploadImage 上传图片
+// UploadImage 上传图片（带压缩功能）
 func (s *UploadService) UploadImage(file *multipart.FileHeader) (*models.UploadResponse, error) {
 	// 检查文件类型
 	src, err := file.Open()
@@ -48,15 +49,49 @@ func (s *UploadService) UploadImage(file *multipart.FileHeader) (*models.UploadR
 		return nil, fmt.Errorf("invalid image type: %s", contentType)
 	}
 
+	// 检查图片是否需要压缩
+	needsCompression, err := utils.IsImageTooLarge(file, 1920, 1080)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check image dimensions: %w", err)
+	}
+
+	var compressedData []byte
+	var finalContentType string
+	var finalSize int64
+
+	if needsCompression {
+		// 压缩图片
+		compressedData, finalContentType, err = utils.CompressImage(file, utils.DefaultImageConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compress image: %w", err)
+		}
+		finalSize = utils.GetFileSize(compressedData)
+	} else {
+		// 不需要压缩，直接使用原文件
+		finalContentType = contentType
+		finalSize = file.Size
+	}
+
 	// 生成文件名
 	fileName := utils.GenerateFileName(file.Filename)
 	objectName := fmt.Sprintf("images/%s", fileName)
 
 	// 上传到 MinIO
 	ctx := context.Background()
-	_, err = s.minio.PutObject(ctx, s.config.MinIOBucketName, objectName, src, file.Size, minio.PutObjectOptions{
-		ContentType: contentType,
-	})
+
+	if needsCompression {
+		// 上传压缩后的图片数据
+		reader := bytes.NewReader(compressedData)
+		_, err = s.minio.PutObject(ctx, s.config.MinIOBucketName, objectName, reader, finalSize, minio.PutObjectOptions{
+			ContentType: finalContentType,
+		})
+	} else {
+		// 上传原文件
+		_, err = s.minio.PutObject(ctx, s.config.MinIOBucketName, objectName, src, finalSize, minio.PutObjectOptions{
+			ContentType: finalContentType,
+		})
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
@@ -65,9 +100,10 @@ func (s *UploadService) UploadImage(file *multipart.FileHeader) (*models.UploadR
 	url := s.generateURL(objectName)
 
 	return &models.UploadResponse{
-		URL:      url,
-		Filename: fileName,
-		Size:     file.Size,
+		URL:        url,
+		Filename:   fileName,
+		Size:       finalSize,
+		Compressed: needsCompression,
 	}, nil
 }
 
