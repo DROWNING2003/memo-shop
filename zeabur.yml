@@ -1,0 +1,167 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    env:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:rootpassword}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:ten_agent}
+      - MYSQL_USER=${MYSQL_USER:ten_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:ten_password}
+    ports:
+      - 3306
+    volumes:
+      - /var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - 6379
+    volumes:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 5672   # AMQP protocol port
+      - 15672  # Management UI port
+    env:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:guest}
+    volumes:
+      - /var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    env:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:minioadmin123}
+    ports:
+      - 9000
+      - 9001
+    volumes:
+      - /data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - 8080
+    env:
+      # Database
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=${MYSQL_DATABASE:ten_agent}
+      - DB_USER=${MYSQL_USER:ten_user}
+      - DB_PASSWORD=${MYSQL_PASSWORD:ten_password}
+      
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:""}
+      
+      # MinIO
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:minioadmin123}
+      - MINIO_USE_SSL="false"
+      - MINIO_BUCKET_NAME=ten-agent-bucket
+      - MINIO_PUBLIC_BASE_URL=${MINIO_PUBLIC_URL:http://minio:9000}
+      
+      # RabbitMQ
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:guest}
+      
+      # Application
+      - PORT=8080
+      - GIN_MODE=release
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+      - minio
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./fronted
+      dockerfile: Dockerfile
+    ports:
+      - 3000
+    env:
+      - AGENT_SERVER_URL=http://backend:8080
+      - TEN_DEV_SERVER_URL=http://backend:8080
+      - NEXT_PUBLIC_EDIT_GRAPH_MODE="true"
+    depends_on:
+      - backend
+
+  # Agent Service
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    ports:
+      - 8000
+    env:
+      # Database
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=${MYSQL_DATABASE:ten_agent}
+      - DB_USER=${MYSQL_USER:ten_user}
+      - DB_PASSWORD=${MYSQL_PASSWORD:ten_password}
+      
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:""}
+      
+      # MinIO
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:minioadmin123}
+      - MINIO_USE_SSL="false"
+      - MINIO_BUCKET=ten-agent-bucket
+      
+      # RabbitMQ
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:guest}
+      
+      # OpenAI API Key
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      
+      # Application
+      - PYTHONPATH=/app
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+      - minio
