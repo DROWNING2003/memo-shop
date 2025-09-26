@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-interface RouteParams {
-  params: {
-    params: string[];
-  };
-}
-
 export async function GET(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: Promise<{ params: string[] }> }
 ) {
-  const [width, height] = params.params;
+  const resolvedParams = await params;
+  const [width, height] = resolvedParams.params;
   
   // 创建一个简单的 SVG 占位符
   const svg = `

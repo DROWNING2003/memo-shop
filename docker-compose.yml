@@ -110,7 +110,8 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin123
       MINIO_USE_SSL: "false"
-      MINIO_BUCKET: ten-agent-bucket
+      MINIO_BUCKET_NAME: ten-agent-bucket
+      MINIO_PUBLIC_BASE_URL: http://localhost:9000
       
       # RabbitMQ
       RABBITMQ_HOST: rabbitmq
@@ -148,6 +149,58 @@ services:
       NEXT_PUBLIC_EDIT_GRAPH_MODE: "true"
     depends_on:
       - backend
+    networks:
+      - ten-agent-network
+
+  # Agent Service
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: ten-agent-agent
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Database
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ten_agent
+      DB_USER: ten_user
+      DB_PASSWORD: ten_password
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      
+      # MinIO
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_USE_SSL: "false"
+      MINIO_BUCKET: ten-agent-bucket
+      
+      # RabbitMQ
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      
+      # OpenAI API Key (需要从环境变量获取)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      
+      # Application
+      PYTHONPATH: /app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
       - ten-agent-network
 

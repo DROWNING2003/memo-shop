@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { ArrowLeft, Send, Image, Sparkles, Search, Heart, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import type { Character } from "@/types/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export default function CreatePostcardPage() {
+function CreatePostcardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const characterId = searchParams.get('character_id');
@@ -421,5 +421,20 @@ export default function CreatePostcardPage() {
         </Dialog>
       </div>
     </AuthGuard>
+  );
+}
+
+export default function CreatePostcardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-page flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    }>
+      <CreatePostcardContent />
+    </Suspense>
   );
 }

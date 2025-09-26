@@ -18,8 +18,8 @@ RUN \
   if [ -f yarn.lock ]; then npm install -g yarn && yarn --immutable; \
   elif [ -f package-lock.json ]; then npm ci; \
   elif [ -f pnpm-lock.yaml ]; then npm install -g pnpm@10.2.0 && pnpm i; \
-  elif [ -f bun.lockb ]; then bun i --frozen-lockfile; \
-  elif [ -f bun.lock ]; then bun i --frozen-lockfile; \
+  elif [ -f bun.lockb ]; then bun i; \
+  elif [ -f bun.lock ]; then bun i; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
