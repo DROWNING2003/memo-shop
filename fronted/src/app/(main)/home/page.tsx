@@ -107,8 +107,8 @@ export default function HomePage() {
                 <Mail className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-foreground">我的明信片</h1>
-                <p className="text-sm text-muted-foreground">记录美好时光</p>
+                <h1 className="text-lg font-semibold text-foreground">回忆小卖部</h1>
+                <p className="text-sm text-muted-foreground">童年的纸飞机，现在终于飞回我手里</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">

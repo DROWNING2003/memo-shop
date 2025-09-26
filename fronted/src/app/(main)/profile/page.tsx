@@ -162,27 +162,37 @@ export default function ProfilePage() {
 
   return (
     <AuthGuard>
-      <div className="w-full max-w-sm mx-auto min-h-screen bg-page relative flex flex-col px-6">
-        {/* 顶部导航栏 */}
-        <nav className="w-full glass-container-primary rounded-xl p-4 mt-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="w-8"></div>
-            <h1 className="text-lg font-semibold color-text-primary">个人中心</h1>
-            <Button
-              onClick={handleRefresh}
-              variant="ghost"
-              size="icon"
-              disabled={refreshing}
-              className="w-8 h-8 rounded-lg"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            </Button>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        {/* 顶部导航 */}
+        <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/50">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-foreground">个人中心</h1>
+                <p className="text-sm text-muted-foreground">管理你的账户和内容</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <ThemeToggle />
+              <Button
+                onClick={handleRefresh}
+                size="icon"
+                disabled={refreshing}
+                className="h-9 w-9 rounded-full"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
-        </nav>
+        </header>
 
-        <main className="flex-1 space-y-4 overflow-y-auto pb-4">
-          {/* 用户信息卡片 */}
-          <div className="glass-container-primary rounded-xl p-4">
+        <div className="p-4">
+          <main className="space-y-4">
+            {/* 用户信息卡片 */}
+            <div className="glass-container-primary rounded-xl p-4">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Avatar className="w-16 h-16">
@@ -302,11 +312,7 @@ export default function ProfilePage() {
             <LogOut className="w-4 h-4 mr-2" />
             退出登录
           </Button>
-        </main>
-
-        {/* 底部导航 */}
-        <div className="mt-4">
-          <BottomNavigation />
+          </main>
         </div>
       </div>
     </AuthGuard>
