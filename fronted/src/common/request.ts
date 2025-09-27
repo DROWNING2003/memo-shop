@@ -96,7 +96,10 @@ export const apiStartService = async (
       llm:{
         prompt: buildLLMPrompt(character, postcardList),
         greeting: "可以和我说说心里话吗？",
-      }
+      },
+      main_control: {
+        greeting: "哈喽,可以和我说说心里话吗？",
+      },
     },
   };
 

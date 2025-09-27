@@ -6,7 +6,6 @@ import {
   GraphOptionItem,
   ITrulienceSettings,
 } from "@/types";
-export const GITHUB_URL = "https://github.com/TEN-framework/TEN-Agent";
 export const OPTIONS_KEY = "__options__";
 export const DEFAULT_OPTIONS: IOptions = {
   channel: "",
@@ -16,7 +15,7 @@ export const DEFAULT_OPTIONS: IOptions = {
   token: "",
 };
 export const DESCRIPTION =
-  "TEN Agent is an open-source multimodal AI agent that can speak, see, and access a knowledge base(RAG).";
+  "如果回忆有声音，你会和谁聊天？用AI技术把回忆变成明信片，和TA分享你的故事。";
 export const LANGUAGE_OPTIONS: LanguageOptionItem[] = [
   {
     label: "English",

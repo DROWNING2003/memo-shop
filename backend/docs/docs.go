@@ -2034,7 +2034,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Memory Postcard API",
-	Description:      "回忆小卖部 AI 角色明信片交流应用 API 文档",
+	Description:      "回忆明信片 AI 角色明信片交流应用 API 文档",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

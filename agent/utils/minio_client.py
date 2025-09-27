@@ -16,7 +16,7 @@ class MinioClient:
     
     def __init__(self):
         self.client = None
-        self.bucket_name = os.getenv('MINIO_BUCKET', 'ten-agent-bucket')
+        self.bucket_name = os.getenv('MINIO_BUCKET', 'memoshop-agent-bucket')
         self.is_connected = False
         self.connect()
     

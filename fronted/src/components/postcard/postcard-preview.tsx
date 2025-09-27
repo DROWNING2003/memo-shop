@@ -158,7 +158,7 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
       const logoElement = document.createElement('div');
       logoElement.className = 'flex items-center';
       logoElement.innerHTML = `
-          <span class="text-xs font-bold text-gray-800">回忆小卖部</span>
+          <span class="text-xs font-bold text-gray-800">回忆明信片</span>
       `;
       
       // 找到分享按钮的位置并替换
@@ -235,7 +235,7 @@ export function PostcardPreview({ postcard, className }: PostcardPreviewProps) {
       const backgroundText = gradient.value === 'none' ? '无背景' : gradient.name;
       const a = document.createElement('a');
       a.href = shareImageUrl;
-      a.download = `回忆小卖部-明信片-${backgroundText}.png`;
+      a.download = `回忆明信片-明信片-${backgroundText}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

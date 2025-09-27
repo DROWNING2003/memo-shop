@@ -1,6 +1,6 @@
 // @title Memory Postcard API
 // @version 1.0
-// @description 回忆小卖部 AI 角色明信片交流应用 API 文档
+// @description 回忆明信片 AI 角色明信片交流应用 API 文档
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support

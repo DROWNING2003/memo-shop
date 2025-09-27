@@ -17,7 +17,6 @@ import { InfoIcon, GitHubIcon, PaletteIcon } from "@/components/Icon"
 import {
   useAppSelector,
   useAppDispatch,
-  GITHUB_URL,
   COLOR_LIST,
 } from "@/common"
 import { setThemeColor } from "@/store/reducers/global"

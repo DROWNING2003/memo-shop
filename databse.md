@@ -1,8 +1,8 @@
-# 《回忆小卖部》数据库设计文档
+# 《回忆明信片》数据库设计文档
 
 ## 数据库概览
 
-本文档描述了《回忆小卖部》AI 角色明信片交流应用的数据库表结构设计。
+本文档描述了《回忆明信片》AI 角色明信片交流应用的数据库表结构设计。
 
 ## 表结构设计
 
@@ -48,26 +48,6 @@ CREATE TABLE characters (
     deleted_at TIMESTAMP NULL,
     FOREIGN KEY (creator_id) REFERENCES users(id)
 );
-```
-
-### 3. 角色声音表 (character_voices)
-
-存储角色的声音文件信息。
-
-```sql
-CREATE TABLE character_voices (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    character_id BIGINT NOT NULL COMMENT '角色ID',
-    voice_url VARCHAR(255) NOT NULL COMMENT '声音文件URL',
-    file_format ENUM('mp3', 'wav') NOT NULL COMMENT '文件格式',
-    file_size INT COMMENT '文件大小(bytes)',
-    duration INT COMMENT '时长(秒)',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
-);
-```
 
 ### 4. 用户角色关系表 (user_character_relations)
 

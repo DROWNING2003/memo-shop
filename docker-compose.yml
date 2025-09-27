@@ -4,20 +4,20 @@ services:
   # MySQL Database
   mysql:
     image: mysql:8.0
-    container_name: ten-agent-mysql
+    container_name: memo-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: ten_agent
-      MYSQL_USER: ten_user
-      MYSQL_PASSWORD: ten_password
+      MYSQL_DATABASE: memo_shop
+      MYSQL_USER: memo_shop_user
+      MYSQL_PASSWORD: memo_shop_password
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
-      - ten-agent-network
+      - memosho p-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
@@ -26,14 +26,14 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: ten-agent-redis
+    container_name: memoshop-agent-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - ten-agent-network
+      - memoshop-agent-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -43,7 +43,7 @@ services:
   # RabbitMQ Message Queue
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: ten-agent-rabbitmq
+    container_name: memoshop-agent-rabbitmq
     restart: unless-stopped
     ports:
       - "5672:5672"   # AMQP protocol port
@@ -54,7 +54,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - ten-agent-network
+      - memoshop-agent-network
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 30s
@@ -64,7 +64,7 @@ services:
   # MinIO Object Storage
   minio:
     image: minio/minio:latest
-    container_name: ten-agent-minio
+    container_name: memoshop-agent-minio
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -75,7 +75,7 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - ten-agent-network
+      - memoshop-agent-network
     command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -88,7 +88,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ten-agent-backend
+    container_name: memoshop-agent-backend
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -96,9 +96,9 @@ services:
       # Database
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_NAME: ten_agent
-      DB_USER: ten_user
-      DB_PASSWORD: ten_password
+      DB_NAME: memo_shop
+      DB_USER: memo_shop_user
+      DB_PASSWORD: memoshop_password
       
       # Redis
       REDIS_HOST: redis
@@ -110,7 +110,7 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin123
       MINIO_USE_SSL: "false"
-      MINIO_BUCKET_NAME: ten-agent-bucket
+      MINIO_BUCKET_NAME: memoshop-agent-bucket
       MINIO_PUBLIC_BASE_URL: http://localhost:9000
       
       # RabbitMQ
@@ -132,14 +132,14 @@ services:
       minio:
         condition: service_healthy
     networks:
-      - ten-agent-network
+      - memoshop-agent-network
 
   # Frontend Service
   frontend:
     build:
       context: ./fronted
       dockerfile: Dockerfile
-    container_name: ten-agent-frontend
+    container_name: memoshop-agent-frontend
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -150,14 +150,14 @@ services:
     depends_on:
       - backend
     networks:
-      - ten-agent-network
+      - memoshop-agent-network
 
   # Agent Service
   agent:
     build:
       context: ./agent
       dockerfile: Dockerfile
-    container_name: ten-agent-agent
+    container_name: memoshop-agent-agent
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -165,9 +165,9 @@ services:
       # Database
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_NAME: ten_agent
-      DB_USER: ten_user
-      DB_PASSWORD: ten_password
+      DB_NAME: memo_shop
+      DB_USER: memo_shop_user
+      DB_PASSWORD: memo_shop_password
       
       # Redis
       REDIS_HOST: redis
@@ -179,7 +179,7 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin123
       MINIO_USE_SSL: "false"
-      MINIO_BUCKET: ten-agent-bucket
+      MINIO_BUCKET: memoshop-agent-bucket
       
       # RabbitMQ
       RABBITMQ_HOST: rabbitmq
@@ -202,7 +202,7 @@ services:
       minio:
         condition: service_healthy
     networks:
-      - ten-agent-network
+      - memoshop-agent-network
 
 volumes:
   mysql_data:
@@ -215,5 +215,5 @@ volumes:
     driver: local
 
 networks:
-  ten-agent-network:
+  memoshop-agent-network:
     driver: bridge

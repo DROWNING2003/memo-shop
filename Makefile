@@ -1,10 +1,10 @@
-# TEN Agent Docker Compose Management
+# MEMOSHOP Docker Compose Management
 
 .PHONY: help dev up down logs clean build rebuild
 
 # Default target
 help:
-	@echo "TEN Agent Docker Compose Commands:"
+	@echo "MEMOSHOP Docker Compose Commands:"
 	@echo ""
 	@echo "Development:"
 	@echo "  make dev          - Start development services (MySQL, Redis, MinIO only)"
@@ -83,18 +83,18 @@ clean:
 
 clean-images:
 	@echo "Removing built images..."
-	docker rmi $$(docker images -q --filter "reference=*ten-agent*") 2>/dev/null || true
+	docker rmi $$(docker images -q --filter "reference=*memo-shop*") 2>/dev/null || true
 
 reset: clean clean-images build up
 
 # Database operations
 db-shell:
 	@echo "Connecting to MySQL shell..."
-	docker exec -it ten-agent-mysql mysql -u ten_user -pten_password ten_agent
+	docker exec -it memo-shop-mysql mysql -u memo_shop_user -pmemo_shop_password memo_shop
 
 redis-shell:
 	@echo "Connecting to Redis CLI..."
-	docker exec -it ten-agent-redis redis-cli
+	docker exec -it memo-shop-redis redis-cli
 
 # MinIO
 minio-console:
@@ -109,7 +109,7 @@ health:
 
 status:
 	@echo "Checking service status..."
-	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" --filter "name=ten-agent"
+	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" --filter "name=memo-shop"
 
 # Show service URLs
 urls:

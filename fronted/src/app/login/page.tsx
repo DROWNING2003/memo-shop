@@ -100,7 +100,7 @@ export default function LoginPage() {
     <div className="w-full max-w-sm mx-auto min-h-screen bg-page relative flex flex-col items-center px-6">
       {/* Logo和标题 */}
       <div className="mt-16 mb-8 text-center">
-        <div className="font-['Pacifico'] text-4xl text-primary mb-2">回忆小卖部</div>
+        <div className="font-['Pacifico'] text-4xl text-primary mb-2">回忆明信片</div>
         <p className="text-muted-foreground text-sm">如果记忆有声音</p>
       </div>
 

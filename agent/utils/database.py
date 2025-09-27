@@ -23,9 +23,9 @@ class DatabaseManager:
             self.connection = mysql.connector.connect(
                 host=os.getenv('DB_HOST', 'localhost'),
                 port=int(os.getenv('DB_PORT', '3306')),
-                user=os.getenv('DB_USER', 'ten_user'),
-                password=os.getenv('DB_PASSWORD', 'ten_password'),
-                database=os.getenv('DB_NAME', 'ten_agent'),
+                user=os.getenv('DB_USER', 'memo_shop_user'),
+                password=os.getenv('DB_PASSWORD', 'memo_shop_password'),
+                database=os.getenv('DB_NAME', 'memo_shop'),
                 charset='utf8mb4',
                 autocommit=True
             )

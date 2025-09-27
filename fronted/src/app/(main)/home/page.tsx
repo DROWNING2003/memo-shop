@@ -87,11 +87,9 @@ export default function HomePage() {
         <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/50">
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Mail className="w-4 h-4 text-primary" />
-              </div>
+              <img src="/favicon.ico" alt="Logo" className="size-14" />
               <div>
-                <h1 className="text-lg font-semibold text-foreground">回忆小卖部</h1>
+                <h1 className="text-lg font-semibold text-foreground">回忆明信片</h1>
                 <p className="text-sm text-muted-foreground">童年的纸飞机，现在终于飞回我手里</p>
               </div>
             </div>

@@ -6,9 +6,12 @@ import { Toaster } from "@/components/ui/sonner"
 import "./global.css"
 
 export const metadata: Metadata = {
-  title: "TEN Agent | Real-Time Multimodal AI Agent",
+  title: "回忆明信片",
   description:
-    "TEN Agent is an open-source multimodal AI agent that can speak, see, and access a knowledge base(RAG).",
+    "如果回忆有声音，你会和谁聊天？用AI技术把回忆变成明信片，和TA分享你的故事。",
+  icons: {
+    icon: "/logo.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black",

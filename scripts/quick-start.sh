@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# TEN Agent Quick Start Script
+# MEMOSHOP Quick Start Script
 
 set -e
 
@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}"
-echo "🚀 TEN Agent Quick Start"
+echo "🚀 MemoShop Quick Start"
 echo "========================"
 echo -e "${NC}"
 
@@ -77,8 +77,8 @@ main() {
             docker-compose -f docker-compose.dev.yml up -d
             
             # Wait for services
-            wait_for_service "MySQL" "docker exec ten-agent-mysql-dev mysqladmin ping -h localhost --silent"
-            wait_for_service "Redis" "docker exec ten-agent-redis-dev redis-cli ping | grep -q PONG"
+            wait_for_service "MySQL" "docker exec memo-shop-mysql-dev mysqladmin ping -h localhost --silent"
+            wait_for_service "Redis" "docker exec memo-shop-redis-dev redis-cli ping | grep -q PONG"
             wait_for_service "MinIO" "curl -f http://localhost:9000/minio/health/live"
             wait_for_service "Backend API" "curl -f http://localhost:8080/health"
             
@@ -103,8 +103,8 @@ main() {
             docker-compose up -d --build
             
             # Wait for services
-            wait_for_service "MySQL" "docker exec ten-agent-mysql mysqladmin ping -h localhost --silent"
-            wait_for_service "Redis" "docker exec ten-agent-redis redis-cli ping | grep -q PONG"
+            wait_for_service "MySQL" "docker exec memo-shop-mysql mysqladmin ping -h localhost --silent"
+            wait_for_service "Redis" "docker exec memo-shop-redis redis-cli ping | grep -q PONG"
             wait_for_service "MinIO" "curl -f http://localhost:9000/minio/health/live"
             wait_for_service "Backend" "curl -f http://localhost:8080"
             wait_for_service "Frontend" "curl -f http://localhost:3000"

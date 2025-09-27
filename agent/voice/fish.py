@@ -44,6 +44,6 @@ class FishVoiceModel():
         print(f"Audio saved to: {output_file}")
 
 if __name__ == "__main__":
-    api_key = "653f6a55435e4a25832417fadc669570"
+    api_key = ""
     fish_model = FishVoiceModel(api_key=api_key)
     fish_model.tts_to_file("Hello, this is a test.", "output.wav", voice="default")

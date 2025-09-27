@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "ten_agent_playground",
+      "name": "memo_shop_playground",
       "dependencies": {
         "@hookform/resolvers": "^3.9.1",
         "@radix-ui/react-avatar": "^1.1.1",
