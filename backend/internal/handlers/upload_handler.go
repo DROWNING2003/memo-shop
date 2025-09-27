@@ -43,8 +43,8 @@ func (h *UploadHandler) UploadImage(c *gin.Context) {
 		return
 	}
 
-	// 检查文件大小（限制为 10MB）
-	if file.Size > 10*1024*1024 {
+	// 检查文件大小（限制为 50MB）
+	if file.Size > 5*10*1024*1024 {
 		c.JSON(http.StatusBadRequest, models.Error(400, "File size too large, maximum 10MB allowed"))
 		return
 	}
@@ -116,7 +116,7 @@ func (h *UploadHandler) UploadAudio(c *gin.Context) {
 	}
 
 	// 检查文件大小（限制为 50MB）
-	if file.Size > 50*1024*1024 {
+	if file.Size > 5*50*1024*1024 {
 		c.JSON(http.StatusBadRequest, models.Error(400, "File size too large, maximum 50MB allowed"))
 		return
 	}

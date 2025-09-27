@@ -98,11 +98,6 @@ export default function ProfileEditPage() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB
-      toast.error("图片大小不能超过5MB");
-      return;
-    }
-
     try {
       setAvatarLoading(true);
       const response = await apiClient.uploadAvatar(file);

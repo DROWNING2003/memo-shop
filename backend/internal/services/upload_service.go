@@ -156,9 +156,9 @@ func (s *UploadService) UploadAudio(file *multipart.FileHeader) (*models.UploadR
 
 // UploadAvatar 上传头像
 func (s *UploadService) UploadAvatar(file *multipart.FileHeader) (*models.UploadResponse, error) {
-	// 检查文件大小（限制为 2MB）
-	if file.Size > 2*1024*1024 {
-		return nil, fmt.Errorf("file size too large, maximum 2MB allowed")
+	// 检查文件大小（限制为 10MB）
+	if file.Size > 10*1024*1024 {
+		return nil, fmt.Errorf("file size too large, maximum 10MB allowed")
 	}
 
 	// 检查文件类型

@@ -20,6 +20,7 @@ class VoiceGenerator:
     def __init__(self):
         self.api_key = os.getenv('FISH_AUDIO_TTS_KEY')
         self.minio_client = get_minio_client()
+        self.bucket_name = os.getenv('MINIO_BUCKET', 'zeabur')
         
         if not self.api_key:
             logger.warning("未设置FISH_AUDIO_TTS_KEY环境变量")
@@ -76,20 +77,18 @@ class VoiceGenerator:
             timestamp = int(time.time())
             object_name = self._generate_object_name(character_id, timestamp)
             
-            file_url = self.minio_client.upload_voice_file(
-                file_path=temp_file_path,
-                character_id=character_id,
-                timestamp=timestamp,
-                object_name=object_name
-            )
-            
-            # 清理临时文件
             try:
-                os.unlink(temp_file_path)
-            except:
-                pass
-            
-            if file_url:
+                file_url = self.minio_client.upload_voice_file(
+                    file_path=temp_file_path,
+                    character_id=character_id,
+                    timestamp=timestamp,
+                    object_name=object_name
+                )
+                
+                if not file_url:
+                    logger.error("❌ 语音文件上传失败")
+                    return None
+                    
                 logger.info(f"✅ 语音文件上传成功: {file_url}")
                 return {
                     "file_url": file_url,
@@ -98,9 +97,17 @@ class VoiceGenerator:
                     "character_id": character_id,
                     "timestamp": timestamp
                 }
-            else:
-                logger.error("❌ 语音文件上传失败")
+                
+            except Exception as e:
+                logger.error(f"❌ MinIO上传失败: {e}")
                 return None
+                
+            finally:
+                # 确保临时文件总是被清理
+                try:
+                    os.unlink(temp_file_path)
+                except:
+                    pass
                 
         except Exception as e:
             logger.error(f"❌ 语音生成失败: {e}")
@@ -116,6 +123,19 @@ class VoiceGenerator:
         else:
             return f"voices/system/{date_str}.wav"
     
+    def delete_voice_file(self, object_name):
+        """删除MinIO中的语音文件"""
+        try:
+            self.minio_client.remove_object(
+                self.bucket_name,
+                object_name
+            )
+            logger.info(f"语音文件删除成功 - 对象名: {object_name}")
+            return True
+        except Exception as e:
+            logger.error(f"语音文件删除失败: {e}")
+            return False
+
     def generate_voice_for_postcard(self, postcard_content, character_id, conversation_id, voice_id=None, voice_url=None):
         """
         为明信片生成语音
@@ -137,7 +157,11 @@ class VoiceGenerator:
         
         # 如果有voice_id，直接使用voice_id生成语音
         if voice_id:
-            return self.generate_voice(clean_text, character_id, model_id=voice_id)
+            try:
+                return self.generate_voice(clean_text, character_id, model_id=voice_id)
+            except Exception as e:
+                logger.error(f"语音生成失败，将回滚事务: {e}")
+                raise
         
         # 如果没有voice_id但有voice_url，先训练自定义模型
         elif voice_url:
@@ -145,11 +169,15 @@ class VoiceGenerator:
                 # 训练自定义语音模型
                 new_voice_id = self.train_custom_voice_from_url(voice_url, character_id, conversation_id)
                 if new_voice_id:
-                    # 使用新训练的模型生成语音
-                    result = self.generate_voice(clean_text, character_id, model_id=new_voice_id)
-                    if result:
-                        result["new_voice_id"] = new_voice_id
-                    return result
+                    try:
+                        # 使用新训练的模型生成语音
+                        result = self.generate_voice(clean_text, character_id, model_id=new_voice_id)
+                        if result:
+                            result["new_voice_id"] = new_voice_id
+                        return result
+                    except Exception as e:
+                        logger.error(f"语音生成失败，将回滚事务: {e}")
+                        raise
                 else:
                     # 训练失败，使用默认语音
                     logger.warning("自定义语音模型训练失败，使用默认语音")
@@ -191,23 +219,33 @@ class VoiceGenerator:
                     logger.error(f"下载语音文件失败: {response.status_code}")
                     return None
             
-            # 训练自定义语音模型
-            model_id = self.fish_model.train_custom_voice(
-                title=f"character_{character_id}_voice",
-                description=f"Custom voice for character {character_id}",
-                voice_files=[temp_file_path],
-                texts=["这是一个测试文本，用于训练自定义语音模型。"],
-                visibility="private"
-            )
-            
-            # 清理临时文件
             try:
-                os.unlink(temp_file_path)
-            except:
-                pass
-            
-            logger.info(f"自定义语音模型训练成功 - model_id: {model_id}")
-            return model_id
+                # 训练自定义语音模型
+                model_id = self.fish_model.train_custom_voice(
+                    title=f"character_{character_id}_voice",
+                    description=f"Custom voice for character {character_id}",
+                    voice_files=[temp_file_path],
+                    texts=["这是一个测试文本，用于训练自定义语音模型。"],
+                    visibility="private"
+                )
+                
+                if not model_id:
+                    logger.error("❌ 自定义语音模型训练失败")
+                    return None
+                    
+                logger.info(f"✅ 自定义语音模型训练成功 - model_id: {model_id}")
+                return model_id
+                
+            except Exception as e:
+                logger.error(f"❌ 自定义语音模型训练失败: {e}")
+                return None
+                
+            finally:
+                # 确保临时文件总是被清理
+                try:
+                    os.unlink(temp_file_path)
+                except:
+                    pass
             
         except Exception as e:
             logger.error(f"自定义语音模型训练失败: {e}")

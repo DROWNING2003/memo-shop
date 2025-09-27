@@ -126,12 +126,6 @@ function CreatePostcardContent() {
       return;
     }
 
-    // 检查文件大小（限制为5MB）
-    if (file.size > 5 * 1024 * 1024) {
-      alert('图片大小不能超过5MB');
-      return;
-    }
-
     setUploading(true);
     try {
       const response = await apiClient.uploadImage(file);

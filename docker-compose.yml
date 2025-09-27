@@ -61,6 +61,22 @@ services:
       timeout: 10s
       retries: 5
 
+  ten:
+    image: registry.cn-hangzhou.aliyuncs.com/drowning2003/ten-agent-server:1.3
+    container_name: memoshop-agent-ten
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      TEN_DEV_OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-3.5-turbo}
+    networks:
+      - memoshop-agent-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
   # MinIO Object Storage
   minio:
     image: minio/minio:latest
