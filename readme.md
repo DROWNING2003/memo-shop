@@ -1,22 +1,12 @@
 # 回忆明信片：AI 陪伴式情感交流平台
 
-<iframe 
-  src="//player.bilibili.com/player.html?isOutside=true&aid=115276066660250&bvid=BV1DGnHzjE9R&cid=32674942909&p=1" 
-  scrolling="no" 
-  border="0" 
-  frameborder="no" 
-  framespacing="0" 
-  allowfullscreen="true"
-  width="100%" 
-  height="400"
-  style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 2rem 0;"
-></iframe>
+视频演示：https://www.bilibili.com/video/BV1DGnHzjE9R/
 
 ## 🖼️ 视觉展示
 
 | 项目海报 | 明信片系列 |
 |----------|------------|
-| ![回忆明信片项目海报](images/海报.png) | ![明信片1](images/明信片1.jpg) |
+| ![回忆明信片项目海报](images/海报.jpg) | ![明信片1](images/明信片1.jpg) |
 |  | ![明信片2](images/明信片2.jpg) |
 |  | ![明信片3](images/明信片3.jpg) |
 |  | ![明信片4](images/明信片4.jpg) |
